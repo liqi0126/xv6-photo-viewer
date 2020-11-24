@@ -8,7 +8,6 @@ OBJS = \
 	ioapic.o\
 	kalloc.o\
 	kbd.o\
-	mouse.o\
 	lapic.o\
 	log.o\
 	main.o\
@@ -28,12 +27,13 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
-	PVCGui.o\
-	sound.o\
-	sysaudio.o\
+	msg.o\
+	mouse.o\
+	gui.o\
+	gui_kernal.o\
 
 # Cross-compiling (e.g., on Mac OS X)
-#TOOLPREFIX = i386-jos-elf-
+# TOOLPREFIX = i386-jos-elf
 
 # Using native tools (e.g., on X86 Linux)
 #TOOLPREFIX =
@@ -55,12 +55,14 @@ TOOLPREFIX := $(shell if i386-jos-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/d
 endif
 
 # If the makefile can't find QEMU, specify its path here
-QEMU = qemu-system-i386
+# QEMU = qemu-system-i386
 
 # Try to infer the correct QEMU
 ifndef QEMU
 QEMU = $(shell if which qemu > /dev/null; \
 	then echo qemu; exit; \
+	elif which qemu-system-i386 > /dev/null; \
+	then echo qemu-system-i386; exit; \
 	else \
 	qemu=/Applications/Q.app/Contents/MacOS/i386-softmmu.app/Contents/MacOS/i386-softmmu; \
 	if test -x $$qemu; then echo $$qemu; exit; fi; fi; \
@@ -76,15 +78,15 @@ AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
-#CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer
-CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer
+#CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer
+CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -fvar-tracking -fvar-tracking-assignments -O0 -g -Wall -MD -gdwarf-2 -m32 -fno-omit-frame-pointer
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null)
 
 xv6.img: bootblock kernel fs.img
-	dd if=/dev/zero of=xv6.img count=120000
+	dd if=/dev/zero of=xv6.img count=10000
 	dd if=bootblock of=xv6.img conv=notrunc
 	dd if=kernel of=xv6.img seek=1 conv=notrunc
 
@@ -125,8 +127,8 @@ kernel: $(OBJS) entry.o entryother initcode kernel.ld
 # great for testing the kernel on real hardware without
 # needing a scratch disk.
 MEMFSOBJS = $(filter-out ide.o,$(OBJS)) memide.o
-kernelmemfs: $(MEMFSOBJS) entry.o entryother initcode fs.img
-	$(LD) $(LDFLAGS) -Ttext 0x100000 -e main -o kernelmemfs entry.o  $(MEMFSOBJS) -b binary initcode entryother fs.img
+kernelmemfs: $(MEMFSOBJS) entry.o entryother initcode kernel.ld fs.img
+	$(LD) $(LDFLAGS) -T kernel.ld -o kernelmemfs entry.o  $(MEMFSOBJS) -b binary initcode entryother fs.img
 	$(OBJDUMP) -S kernelmemfs > kernelmemfs.asm
 	$(OBJDUMP) -t kernelmemfs | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kernelmemfs.sym
 
@@ -136,7 +138,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o PVCPainter.o PVCWindow.o PVCLib.o PVCControl.o PVCDialog.o PVCDecodePNG.o PVCDecodeJPEG.o math.o common.o huffman.o decodemp3.o
+ULIB = ulib.o usys.o printf.o umalloc.o bitmap.o xv6_api.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -150,7 +152,7 @@ _forktest: forktest.o $(ULIB)
 	$(OBJDUMP) -S _forktest > forktest.asm
 
 mkfs: mkfs.c fs.h
-	gcc -Werror -Wall -o mkfs mkfs.c
+	gcc -Wall -o mkfs mkfs.c
 
 # Prevent deletion of intermediate files, e.g. cat.o, after first build, so
 # that disk image changes after first build are persistent until clean.  More
@@ -174,49 +176,41 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_PVCDesktop\
-    _PVCPhotoViewer\
-	#_PVCMP3\
-	#_pause\
-	#_wavBufPlay\
-	#_playWav\
-	#_mp3decodePlay\
-	#_playmp3\
-	#_PVCFileManager\
-	# _PVCNotePad\
-	
-	
+	_desktop\
+	_test\
+    _painter\
+    _plane\
+    _editor\
+    _timerapp\
 
-PVCFILES =\
-	ASCII\
-	RHGameStatus.bmp\
-    PhotoViewer.bmp\
-	desktop.bmp\
-	last.bmp\
-	next.bmp\
-    Snake.bmp\
-    test.jpg\
-    Clock.bmp\
-	Shell.bmp\
-	test.png\
-	anticlockwise90.bmp\
-	clockwise90.bmp\
-	anticlockwise30.bmp\
-	clockwise30.bmp\
-	right.bmp\
-	left.bmp\
-	reduce.bmp\
-	enlarge.bmp\
-	rotate.bmp\
-	file.bmp\
-	#GBK2312\
-	pointer.bmp\
-	FileManager.bmp\
-	MP3.bmp\
-    NotePad.bmp\
+IMGS=desktop.bmp\
+     clock.bmp\
+     editor.bmp\
+     test.bmp\
+     plane.bmp\
+     clock.bmp\
+     editor.bmp\
+     painter.bmp\
+     background.bmp\
+     bullet1.bmp\
+     enemy_big.bmp\
+     enemy_middle.bmp\
+     enemy_small.bmp\
+     hero.bmp\
+     0.bmp\
+     1.bmp\
+     2.bmp\
+     3.bmp\
+     4.bmp\
+     5.bmp\
+     6.bmp\
+     7.bmp\
+     8.bmp\
+     9.bmp\
+     separator.bmp\
 
-fs.img: mkfs README $(PVCFILES) $(UPROGS)
-	./mkfs fs.img README $(PVCFILES) $(UPROGS)
+fs.img: mkfs README $(IMGS) $(UPROGS)
+	./mkfs fs.img README $(IMGS) $(UPROGS)
 
 -include *.d
 
@@ -250,15 +244,15 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 	then echo "-gdb tcp::$(GDBPORT)"; \
 	else echo "-s -p $(GDBPORT)"; fi)
 ifndef CPUS
-CPUS := 2
+CPUS := 1
 endif
-QEMUOPTS = -soundhw ac97 -hdb fs.img xv6.img -smp $(CPUS) -m 512 $(QEMUEXTRA) -vga std
+QEMUOPTS = -hdb fs.img xv6.img -smp $(CPUS) -m 512 -vga std $(QEMUEXTRA)
 
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
 qemu-memfs: xv6memfs.img
-	$(QEMU) xv6memfs.img -smp $(CPUS)
+	$(QEMU) xv6memfs.img -smp $(CPUS) -m 256
 
 qemu-nox: fs.img xv6.img
 	$(QEMU) -nographic $(QEMUOPTS)

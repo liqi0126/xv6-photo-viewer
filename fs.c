@@ -5,7 +5,7 @@
 //   + Directories: inode with special contents (list of other inodes!)
 //   + Names: paths like /usr/rtm/xv6/fs.c for convenient naming.
 //
-// This file contains the low-level file system manipulation
+// This file contains the low-level file system manipulation 
 // routines.  The (higher-level) system call implementations
 // are in sysfile.c.
 
@@ -28,7 +28,7 @@ void
 readsb(int dev, struct superblock *sb)
 {
   struct buf *bp;
-
+  
   bp = bread(dev, 1);
   memmove(sb, bp->data, sizeof(*sb));
   brelse(bp);
@@ -39,14 +39,14 @@ static void
 bzero(int dev, int bno)
 {
   struct buf *bp;
-
+  
   bp = bread(dev, bno);
   memset(bp->data, 0, BSIZE);
   log_write(bp);
   brelse(bp);
 }
 
-// Blocks.
+// Blocks. 
 
 // Allocate a zeroed disk block.
 static uint
@@ -314,12 +314,14 @@ iunlock(struct inode *ip)
 // be recycled.
 // If that was the last reference and the inode has no links
 // to it, free the inode (and its content) on disk.
+// All calls to iput() must be inside a transaction in
+// case it has to free the inode.
 void
 iput(struct inode *ip)
 {
   acquire(&icache.lock);
   if(ip->ref == 1 && (ip->flags & I_VALID) && ip->nlink == 0){
-    // inode has no links: truncate and free inode.
+    // inode has no links and no other references: truncate and free.
     if(ip->flags & I_BUSY)
       panic("iput busy");
     ip->flags |= I_BUSY;
@@ -348,7 +350,7 @@ iunlockput(struct inode *ip)
 //
 // The content (data) associated with each inode is stored
 // in blocks on the disk. The first NDIRECT block numbers
-// are listed in ip->addrs[].  The next NINDIRECT blocks are
+// are listed in ip->addrs[].  The next NINDIRECT blocks are 
 // listed in block ip->addrs[NDIRECT].
 
 // Return the disk block address of the nth block in inode ip.
@@ -357,7 +359,6 @@ static uint
 bmap(struct inode *ip, uint bn)
 {
   uint addr, *a;
-  uint d1, d2, k1, k2, k3;
   struct buf *bp;
 
   if(bn < NDIRECT){
@@ -367,36 +368,35 @@ bmap(struct inode *ip, uint bn)
   }
   bn -= NDIRECT;
 
-  if(bn < NINDIRECT * NINDIRECT * NINDIRECT){
+  if(bn < NINDIRECT){
     // Load indirect block, allocating if necessary.
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
-    d1 = bn / NINDIRECT;
-    k1 = bn % NINDIRECT;
-    d2 = d1 / NINDIRECT;
-    k2 = d1 % NINDIRECT;
-    k3 = d2 % NINDIRECT;
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
-    //Find the first level indirect block
-    if((addr = a[k3]) == 0){
-      a[k3] = addr = balloc(ip->dev);
+    if((addr = a[bn]) == 0){
+      a[bn] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+    brelse(bp);
+    return addr;
+  }
+  bn -= NINDIRECT;
+
+  if(bn < NINDIRECT * NINDIRECT){
+    if ((addr = ip->addrs[NDIRECT+1]) == 0)
+      ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+    if((addr = a[bn/NINDIRECT]) == 0){
+      a[bn/NINDIRECT] = addr = balloc(ip->dev);
       log_write(bp);
     }
     brelse(bp);
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
-    //Find the second level indirect block
-    if((addr = a[k2]) == 0){
-      a[k2] = addr = balloc(ip->dev);
-      log_write(bp);
-    }
-    brelse(bp);
-    bp = bread(ip->dev, addr);
-    a = (uint*)bp->data;
-    //Find the data block
-    if((addr = a[k1]) == 0){
-      a[k1] = addr = balloc(ip->dev);
+    if((addr = a[bn%NINDIRECT]) == 0){
+      a[bn%NINDIRECT] = addr = balloc(ip->dev);
       log_write(bp);
     }
     brelse(bp);
@@ -424,7 +424,7 @@ itrunc(struct inode *ip)
       ip->addrs[i] = 0;
     }
   }
-
+  
   if(ip->addrs[NDIRECT]){
     bp = bread(ip->dev, ip->addrs[NDIRECT]);
     a = (uint*)bp->data;
@@ -465,10 +465,12 @@ readi(struct inode *ip, char *dst, uint off, uint n)
       return -1;
     return devsw[ip->major].read(ip, dst, n);
   }
+
   if(off > ip->size || off + n < off)
     return -1;
   if(off + n > ip->size)
     n = ip->size - off;
+
   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
     bp = bread(ip->dev, bmap(ip, off/BSIZE));
     m = min(n - tot, BSIZE - off%BSIZE);
@@ -575,7 +577,7 @@ dirlink(struct inode *dp, char *name, uint inum)
   de.inum = inum;
   if(writei(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
     panic("dirlink");
-
+  
   return 0;
 }
 
@@ -622,6 +624,7 @@ skipelem(char *path, char *name)
 // Look up and return the inode for a path name.
 // If parent != 0, return the inode for the parent and copy the final
 // path element into name, which must have room for DIRSIZ bytes.
+// Must be called inside a transaction since it calls iput().
 static struct inode*
 namex(char *path, int nameiparent, char *name)
 {

@@ -1,364 +1,212 @@
 #include "types.h"
 #include "x86.h"
 #include "defs.h"
-#include "mouse.h"
+#include "msg.h"
+#include "spinlock.h"
 #include "traps.h"
-#include "memlayout.h"
-#include "PVCObject.h"
 
-enum BtnState
+static struct spinlock mouselock;
+static struct {
+  int x_sgn, y_sgn, x_mov, y_mov;
+  int l_btn, r_btn, m_btn;
+  int x_overflow, y_overflow;
+  uint tick;
+} packet;
+static int count;
+static int recovery;
+static int lastbtn, lastdowntick, lastclicktick;
+
+void
+mouse_wait(uchar type)
 {
-  BtnFirstDown,
-  BtnFirstUp,
-  BtnSecondDown,
-  BtnSecondUp,
-  Null
-};
-
-#define TICKS_INTERVAL 20
-
-typedef struct MouseMessageUnit
-{
-  int state;
-  int param;
-  int ticks;
-} MouseMessageUnit;
-
-MouseMessageUnit lBtnUnit;
-MouseMessageUnit rBtnUnit;
-MouseMessageUnit mBtnUnit;
-
-#define LBTNDOWN 0x80
-#define LBTNUP   0x40
-#define RBTNDOWN 0x20
-#define RBTNUP   0x10
-#define MBTNDOWN 0x08
-#define MBTNUP   0x04
-
-#define LBTNBIT  0x01
-#define RBTNBIT  0x02
-#define MBTNBIT  0x04
-
-extern void pvcDrawMouse();
-extern void sendMessage(int wndId, PMessage msg);
-extern PWndList wndList;
-
-int x_position = SCREEN_WIDTH / 2;
-int y_position = SCREEN_HEIGHT / 2;
-
-void mouseInterupt(int ticks)
-{
-  static int recovery = 0;
-  static int count = -1;
-	static int x_sign = 0;
-	static int y_sign = 0;
-  extern ushort videoWidth;
-  extern ushort videoHeight;
-
-  static uchar button = 0;
-  static uchar buttonState = 0;
-
-  int state = inb(0x64);
-
-  if ((state & 1) == 0 || (state & 0x20) == 0)
-  {
-    //cprintf("mouseInterupt return : %d\n", state);
-    return;
-  }
-
-  //cprintf("mouseInterupt : %d\n", state);
-  char ch = inb(MOUSEATAP);
-
-  if (recovery == 0 && (ch & 255) == 0)
-    recovery = 1;
-  else if (recovery == 1 && (ch & 255) == 0)
-    recovery = 2;
-  else if ((ch & 255) == 12)
-    recovery = 0;
-  else
-    recovery = -1;
-
-  if (count == -1)
-  {
-    if (ch == (char)0xfa)
+    uint time_out = 100000;
+    if(type == 0)
     {
-      cprintf("0xfa return\n");
-      count = 0;
-    }
-    return;
-  }
-	switch (++count)
-	{
-	case 1:
-    if(ch & 0x08)
-    {
-      //LBUTTON
-      if (ch & LBTNBIT)
-      {
-        if (buttonState & LBTNBIT)
-          button &= ~LBTNDOWN;
-        else
+        while(--time_out)
         {
-          button |= LBTNDOWN;
-          buttonState |= LBTNBIT;
+            if((inb(0x64) & 1) == 1)
+                return;
         }
-      }
-      else
-      {
-        if (!(buttonState & LBTNBIT))
-          button &= ~LBTNUP;
-        else
-        {
-          button |= LBTNUP;
-          buttonState &= ~LBTNBIT;
-        }
-      }
-      //RBUTTON
-      if (ch & RBTNBIT)
-      {
-        if (buttonState & RBTNBIT)
-          button &= ~RBTNDOWN;
-        else
-        {
-          button |= RBTNDOWN;
-          buttonState |= RBTNBIT;
-        }
-      }
-      else
-      {
-        if (!(buttonState & RBTNBIT))
-          button &= ~RBTNUP;
-        else
-        {
-          button |= RBTNUP;
-          buttonState &= ~RBTNBIT;
-        }
-      }
-      //MBUTTON
-      if (ch & MBTNBIT)
-      {
-        if (buttonState & MBTNBIT)
-          button &= ~MBTNDOWN;
-        else
-        {
-          button |= MBTNDOWN;
-          buttonState |= MBTNBIT;
-        }
-      }
-      else
-      {
-        if (!(buttonState & MBTNBIT))
-          button &= ~MBTNUP;
-        else
-        {
-          button |= MBTNUP;
-          buttonState &= ~MBTNBIT;
-        }
-      }
-
-      x_sign = ch & 0x10 ? 0xffffff00 : 0 ;
-      y_sign = ch & 0x20 ? 0xffffff00 : 0 ;
     }
     else
-      count = 0 ;
-  break;
-	case 2:
-	  x_position += ( x_sign | ch ) ;
-    if (x_position < 0)
-      x_position = 0;
-    else if (x_position >= videoWidth)
-      x_position = videoWidth - 1;
-	 	break;
-	case 3:
-    y_position += -( y_sign | ch ) ;
-    if (y_position < 0)
-      y_position = 0;
-    else if (y_position >= videoHeight)
-      y_position = videoHeight - 1;
-	  break;
-  default:
-    count = 0;
-  }
-  if (recovery == 2)
-  {
-    count = 0;
-    recovery = -1;
-  }
-  else if (count == 3)
-  {
-    count = 0;
-    pvcDrawMouse();
-    PMessage msg;
-    msg.param = (x_position << 16 & 0xffff0000) | (y_position & 0x0000ffff);
-
-    //LBUTTON
-    if (button & LBTNDOWN)
     {
-      if (lBtnUnit.state == Null)
-      {
-        lBtnUnit.state = BtnFirstDown;
-        lBtnUnit.param = msg.param;
-        lBtnUnit.ticks = ticks;
-      }
-      else if (lBtnUnit.state == BtnFirstUp)
-      {
-        lBtnUnit.state = BtnSecondDown;
-        msg.type = MSG_LBUTTON_DCLK;
-        sendMessage(wndList.head, msg);
-      }
+        while(--time_out)
+        {
+            if((inb(0x64) & 2) == 0)
+                return;
+        }
     }
-
-    if (button & LBTNUP)
-    {
-      if (lBtnUnit.state == Null)
-      {
-        msg.type = MSG_LBUTTON_UP;
-        sendMessage(wndList.head, msg);
-      }
-      else if (lBtnUnit.state == BtnFirstDown)
-      {
-        lBtnUnit.state = BtnFirstUp;
-      }
-      else if (lBtnUnit.state == BtnSecondDown)
-      {
-        lBtnUnit.state = Null;
-      }
-    }
-
-    //RBUTTON
-    if (button & RBTNDOWN)
-    {
-      if (rBtnUnit.state == Null)
-      {
-        rBtnUnit.state = BtnFirstDown;
-        rBtnUnit.param = msg.param;
-        rBtnUnit.ticks = ticks;
-      }
-      else if (rBtnUnit.state == BtnFirstUp)
-      {
-        rBtnUnit.state = BtnSecondDown;
-        msg.type = MSG_RBUTTON_DCLK;
-        sendMessage(wndList.head, msg);
-      }
-    }
-
-    if (button & RBTNUP)
-    {
-      if (rBtnUnit.state == Null)
-      {
-        msg.type = MSG_RBUTTON_UP;
-        sendMessage(wndList.head, msg);
-      }
-      else if (rBtnUnit.state == BtnFirstDown)
-      {
-        rBtnUnit.state = BtnFirstUp;
-      }
-      else if (rBtnUnit.state == BtnSecondDown)
-      {
-        rBtnUnit.state = Null;
-      }
-    }
-
-    //MBUTTON
-    if (button & MBTNDOWN)
-    {
-      if (mBtnUnit.state == Null)
-      {
-        mBtnUnit.state = BtnFirstDown;
-        mBtnUnit.param = msg.param;
-        mBtnUnit.ticks = ticks;
-      }
-      else if (mBtnUnit.state == BtnFirstUp)
-      {
-        mBtnUnit.state = BtnSecondDown;
-        msg.type = MSG_MBUTTON_DCLK;
-        sendMessage(wndList.head, msg);
-      }
-    }
-
-    if (button & MBTNUP)
-    {
-      if (mBtnUnit.state == Null)
-      {
-        msg.type = MSG_MBUTTON_UP;
-        sendMessage(wndList.head, msg);
-      }
-      else if (mBtnUnit.state == BtnFirstDown)
-      {
-        mBtnUnit.state = BtnFirstUp;
-      }
-      else if (mBtnUnit.state == BtnSecondDown)
-      {
-        mBtnUnit.state = Null;
-      }
-    }
-
-    if (button == 0)
-    {
-      msg.type = MSG_MOUSE_MOVE;
-      sendMessage(wndList.head, msg);
-    }
-    button = 0;
-  }
 }
 
-void checkMouseMessage(int ticks)
+void
+mouse_write(uchar word)
 {
-  if (!(lBtnUnit.state == Null || lBtnUnit.state == BtnSecondDown || lBtnUnit.ticks + TICKS_INTERVAL > ticks))
-  {
-    PMessage msg;
-    msg.param = lBtnUnit.param;
-    msg.type = MSG_LBUTTON_DOWN;
-    sendMessage(wndList.head, msg);
-    if (lBtnUnit.state == BtnFirstUp)
-    {
-      msg.type = MSG_LBUTTON_UP;
-      sendMessage(wndList.head, msg);
-    }
-    lBtnUnit.state = Null;
-  }
-
-  if (!(rBtnUnit.state == Null || rBtnUnit.state == BtnSecondDown || rBtnUnit.ticks + TICKS_INTERVAL > ticks))
-  {
-    PMessage msg;
-    msg.param = rBtnUnit.param;
-    msg.type = MSG_RBUTTON_DOWN;
-    sendMessage(wndList.head, msg);
-    if (rBtnUnit.state == BtnFirstUp)
-    {
-      msg.type = MSG_RBUTTON_UP;
-      sendMessage(wndList.head, msg);
-    }
-    rBtnUnit.state = Null;
-  }
-
-  if (!(mBtnUnit.state == Null || mBtnUnit.state == BtnSecondDown || mBtnUnit.ticks + TICKS_INTERVAL > ticks))
-  {
-    PMessage msg;
-    msg.param = mBtnUnit.param;
-    msg.type = MSG_MBUTTON_DOWN;
-    sendMessage(wndList.head, msg);
-    if (mBtnUnit.state == BtnFirstUp)
-    {
-      msg.type = MSG_MBUTTON_UP;
-      sendMessage(wndList.head, msg);
-    }
-    mBtnUnit.state = Null;
-  }
+    mouse_wait(1);
+    outb(0x64, 0xd4);
+    mouse_wait(1);
+    outb(0x60, word);
 }
 
-void initMouse(void)
+uint
+mouse_read()
 {
-   outb(0x64, 0xa8);
-   outb(0x64, 0xd4);
-   outb(0x60, 0xf4);
-   outb(0x64, 0x60);
-   outb(0x60, 0x47);
-
-   lBtnUnit.state = Null;
-   rBtnUnit.state = Null;
-   mBtnUnit.state = Null;
-
-   picenable(IRQ_MOUSE);
-   ioapicenable(IRQ_MOUSE, 0);
+    mouse_wait(0);
+    return inb(0x60);
 }
+
+void
+mouseinit(void)
+{
+    uchar statustemp;
+
+    mouse_wait(1);
+    outb(0x64, 0xa8);		//激活鼠标接口
+
+    mouse_wait(1);		//激活中断
+    outb(0x64, 0x20);
+    mouse_wait(0);
+    statustemp = (inb(0x60) | 2);
+    mouse_wait(0);
+    outb(0x64, 0x60);
+    mouse_wait(1);
+    outb(0x60, statustemp);
+
+    mouse_write(0xf6);		//设置鼠标为默认设置
+    mouse_read();
+
+    mouse_write(0xfe);		//设置鼠标采样率
+    mouse_read();
+    mouse_write(10);
+    mouse_read();
+
+    mouse_write(0xf4);
+    mouse_read();
+
+    initlock(&mouselock, "mouse");
+    picenable(IRQ_MOUSE);
+    ioapicenable(IRQ_MOUSE, 0);
+
+    count = 0;
+    lastclicktick = lastdowntick = -1000;
+}
+
+void genMouseUpMessage(int btns)
+{
+  message msg;
+  msg.msg_type = M_MOUSE_UP;
+  msg.params[0] = btns;
+  handleMessage(&msg);
+}
+
+void
+genMouseMessage()
+{
+  if (packet.x_overflow || packet.y_overflow) return;
+	int x = packet.x_sgn ? (0xffffff00 | (packet.x_mov & 0xff)) : (packet.x_mov & 0xff);
+	int y = packet.y_sgn ? (0xffffff00 | (packet.y_mov & 0xff)) : (packet.y_mov & 0xff);
+/*	if(x == 127 || x == -127 || y == 127 || y == -127){
+		x = 0;
+		y = 0;
+	}*/
+	packet.x_mov = x;
+	packet.y_mov = y;
+
+  int btns = packet.l_btn | (packet.r_btn << 1) | (packet.m_btn << 2);
+  message msg;
+  if (packet.x_mov || packet.y_mov)
+  {
+    msg.msg_type = M_MOUSE_MOVE;
+    msg.params[0] = packet.x_mov;
+    msg.params[1] = packet.y_mov;
+    msg.params[2] = btns;
+    lastdowntick = lastclicktick = -1000;
+    if (btns != lastbtn) genMouseUpMessage(btns);
+  }
+  else if (btns)
+  {
+    msg.msg_type = M_MOUSE_DOWN;
+    msg.params[0] = btns;
+    lastdowntick = packet.tick;
+  }
+  else if (packet.tick - lastdowntick < 30)
+  {
+    if (lastbtn & 1) msg.msg_type = M_MOUSE_LEFT_CLICK;
+    else msg.msg_type = M_MOUSE_RIGHT_CLICK;
+    if (packet.tick - lastclicktick < 60)
+    {
+      msg.msg_type = M_MOUSE_DBCLICK;
+      lastclicktick = -1000;
+    }
+    else lastclicktick = packet.tick;
+  }
+  else
+  {
+    genMouseUpMessage(btns);
+  }
+  lastbtn = btns;
+  handleMessage(&msg);
+}
+
+
+void
+mouseintr(uint tick)
+{
+  acquire(&mouselock);
+  int state;
+  while (((state = inb(0x64)) & 1) == 1) {
+    int data = inb(0x60);
+    count++;
+
+	  if (recovery == 0 && (data & 255) == 0)
+		  recovery = 1;
+	  else if (recovery == 1 && (data & 255) == 0)
+		  recovery = 2;
+	  else if ((data & 255) == 12)
+		  recovery = 0;
+	  else
+		  recovery = -1;
+
+    switch(count)
+    {
+        case 1: if(data & 0x08)
+                {
+                    packet.y_overflow = (data >> 7) & 0x1;
+                    packet.x_overflow = (data >> 6) & 0x1;
+                    packet.y_sgn = (data >> 5) & 0x1;
+                    packet.x_sgn = (data >> 4) & 0x1;
+                    packet.m_btn = (data >> 2) & 0x1;
+                    packet.r_btn = (data >> 1) & 0x1;
+                    packet.l_btn = (data >> 0) & 0x1;
+                    break;
+                }
+                else
+                {
+                    count = 0;
+                    break;
+                }
+
+        case 2:  packet.x_mov = data;
+                 break;
+        case 3:  packet.y_mov = data;
+                 packet.tick = tick;
+                 break;
+        default: count=0;    break;
+    }
+
+	  if (recovery == 2)
+	  {
+		  count = 0;
+		  recovery = -1;
+	  }
+	  else if (count == 3)
+	  {
+		  count = 0;
+		  genMouseMessage();
+	  }
+	}
+
+  release(&mouselock);
+}
+
+
+

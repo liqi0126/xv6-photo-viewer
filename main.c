@@ -5,8 +5,6 @@
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
-#include "mouse.h"
-#include "PVCGui.h"
 
 static void startothers(void);
 static void mpmain(void)  __attribute__((noreturn));
@@ -33,18 +31,16 @@ main(void)
   tvinit();        // trap vectors
   binit();         // buffer cache
   fileinit();      // file table
-  iinit();         // inode cache
+  iinit();
   ideinit();       // disk
-  soundinit();
+  initGUI();
+  initGUIKernel();
+  mouseinit();
   if(!ismp)
     timerinit();   // uniprocessor timer
   startothers();   // start other processors
   kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()
   userinit();      // first user process
-
-  initMouse();
-  pvcGuiInit();
-
   // Finish setting up this processor in mpmain.
   mpmain();
 }
@@ -118,5 +114,9 @@ pde_t entrypgdir[NPDENTRIES] = {
   [KERNBASE>>PDXSHIFT] = (0) | PTE_P | PTE_W | PTE_PS,
 };
 
+//PAGEBREAK!
+// Blank page.
+//PAGEBREAK!
+// Blank page.
 //PAGEBREAK!
 // Blank page.

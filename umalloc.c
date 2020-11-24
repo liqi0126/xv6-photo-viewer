@@ -88,25 +88,3 @@ malloc(uint nbytes)
         return 0;
   }
 }
-void *realloc(void *ap, uint nbyte)
-// by lsy
-// 作用:等价于c stdlib中的realloc, 
-// 第一个为输入参数,要重新alloc的指针,必须是malloc产生的指针
-// 第二个是realloc的目标Byte长度
-{
-    Header *bp;
-
-    if (!ap)
-        return malloc(nbyte);
-
-    bp = (Header *)ap - 1;//这里-1是因为malloc中最后返回的+1
-    uint size = (bp->s.size - 1) * sizeof(Header);
-    if (size >= nbyte) {
-        return ap;
-    } else {
-        void *new = malloc(nbyte);
-        memmove(new, ap, size);
-        free(ap);
-        return new;
-    }
-}

@@ -1,6 +1,7 @@
 // Shell.
 
 #include "types.h"
+#include "color.h"
 #include "user.h"
 #include "fcntl.h"
 
@@ -12,6 +13,8 @@
 #define BACK  5
 
 #define MAXARGS 10
+
+RGB image[800 * 600];
 
 struct cmd {
   int type;
@@ -146,7 +149,9 @@ main(void)
 {
   static char buf[100];
   int fd;
-  
+
+  int h, w;
+
   // Assumes three file descriptors open.
   while((fd = open("console", O_RDWR)) >= 0){
     if(fd >= 3){
@@ -155,6 +160,13 @@ main(void)
     }
   }
   
+  int res = read24BitmapFile("desktop.bmp", image, &h, &w);
+  printf(1, "res: %d\n", res);
+
+  hello(image, h, w);
+
+  while(1) ;
+
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){

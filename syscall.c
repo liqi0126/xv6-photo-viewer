@@ -6,7 +6,6 @@
 #include "proc.h"
 #include "x86.h"
 #include "syscall.h"
-#include "PVCObject.h"
 
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
@@ -99,31 +98,13 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
-
-extern int sys_paintWindow(void);
-extern int sys_registWindow(void);
-extern int sys_sendMessage(void);
-extern int sys_getMessage(void);
-extern int sys_setTimer(void);
-extern int sys_destroyWindow(void);
-extern int sys_killTimer(void);
-extern int sys_initStringFigure(void);
-extern int sys_getStringFigure(void);
-extern int sys_getTime(void);
-extern int sys_getDate(void);
-extern int sys_setCursor(void);
-extern int sys_flushRect(void);
-extern int sys_resetWindow(void);
-extern int sys_getWindowInfo(void);
-extern int sys_directPaintWindow(void);
-extern int sys_writeSoundBuf(void);
-extern int sys_setSampleRate(void);
-extern int sys_pause(void);
-extern int sys_wavSectionPlay(void);
-extern int sys_waitForMP3Decode(void);
-extern int sys_beginMP3Decode(void);
-extern int sys_endMP3Decode(void);
-extern int sys_getCoreBuf(void);
+extern int sys_hello(void);
+extern int sys_createwindow(void);
+extern int sys_repaintwindow(void);
+extern int sys_getmessage(void);
+extern int sys_settimer(void);
+extern int sys_updatewindow(void);
+extern int sys_destroywindow(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -147,31 +128,13 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-
-[SYS_paintWindow]    sys_paintWindow,
-[SYS_registWindow] sys_registWindow,
-[SYS_sendMessage] sys_sendMessage,
-[SYS_getMessage] sys_getMessage,
-[SYS_setTimer] sys_setTimer,
-[SYS_destroyWindow] sys_destroyWindow,
-[SYS_killTimer] sys_killTimer,
-[SYS_initStringFigure] sys_initStringFigure,
-[SYS_getStringFigure] sys_getStringFigure,
-[SYS_getTime] sys_getTime,
-[SYS_getDate] sys_getDate,
-[SYS_setCursor] sys_setCursor,
-[SYS_flushRect] sys_flushRect,
-[SYS_resetWindow] sys_resetWindow,
-[SYS_getWindowInfo] sys_getWindowInfo,
-[SYS_directPaintWindow] sys_directPaintWindow,
-[SYS_writeSoundBuf] sys_writeSoundBuf,
-[SYS_setSampleRate] sys_setSampleRate,
-[SYS_pause] sys_pause,
-[SYS_wavSectionPlay] sys_wavSectionPlay,
-[SYS_beginMP3Decode] sys_beginMP3Decode,
-[SYS_waitForMP3Decode] sys_waitForMP3Decode,
-[SYS_endMP3Decode] sys_endMP3Decode,
-[SYS_getCoreBuf] sys_getCoreBuf,
+[SYS_hello]   sys_hello,
+[SYS_createwindow]   sys_createwindow,
+[SYS_repaintwindow]   sys_repaintwindow,
+[SYS_getmessage]      sys_getmessage,
+[SYS_settimer]        sys_settimer,
+[SYS_updatewindow]    sys_updatewindow,
+[SYS_destroywindow]    sys_destroywindow,
 };
 
 void

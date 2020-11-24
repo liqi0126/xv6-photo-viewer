@@ -2,75 +2,26 @@
 #include "x86.h"
 #include "defs.h"
 #include "kbd.h"
+#include "msg.h"
+#include "spinlock.h"
 
-extern void sendMessage(int wndId, PMessage msg);
-extern PWndList wndList;
-
-void kbdInterupt()
-{
-  static int shift = 0;
-  static uchar *charcode[2] = {
-    normalMap, e0Map
-  };
-
-  uint st, data;
-
-  st = inb(KBSTATP);
-  data = inb(KBDATAP);
-  if((st & KBS_DIB) == 0 || (st & 0x20) != 0)
-  {
-    //cprintf("kbdInterupt return : %d\n", st);
-    return;
-  }
-
-  if(data == 0xE0){
-    shift = 1;
-    return;
-  } else if(data & 0x80){
-    // Key released
-    data &= 0x7F;
-
-    PMessage msg;
-    msg.type = MSG_KEY_UP;
-    msg.param = charcode[shift][data];
-    if (shift)
-      shift = 0;
-    sendMessage(wndList.entry, msg);
-    return;
-  }
-  PMessage msg;
-  msg.type = MSG_KEY_DOWN;
-  msg.param = charcode[shift][data];
-  if (shift)
-    shift = 0;
-  sendMessage(wndList.entry, msg);
-}
+static struct spinlock kbdlock;
 
 int
 kbdgetc(void)
 {
-  static uchar shift;
+  static uint shift;
   static uchar *charcode[4] = {
     normalmap, shiftmap, ctlmap, ctlmap
   };
   uint st, data, c;
 
   st = inb(KBSTATP);
+  if((st & KBS_DIB) == 0)
+    return -1;
   data = inb(KBDATAP);
-  if((st & KBS_DIB) == 0 || (st & 0x20) != 0)
-  {
-    //cprintf("kbdInterupt return : %d\n", st);
-    return -1;
-  }
 
-  if (st & 0xc0)
-  {
-    return -1;
-  }
-
-  //cprintf("kbdInterupt : %d\n", st);
-
-  //kbdInterupt(data);
+  message msg;
 
   if(data == 0xE0){
     shift |= E0ESC;
@@ -79,6 +30,12 @@ kbdgetc(void)
     // Key released
     data = (shift & E0ESC ? data : data & 0x7F);
     shift &= ~(shiftcode[data] | E0ESC);
+    c = normalmap[data];
+    //cprintf("(%x) ", data);
+    msg.msg_type = M_KEY_UP;
+    msg.params[0] = c;
+    msg.params[1] = shift;
+    handleMessage(&msg);
     return 0;
   } else if(shift & E0ESC){
     // Last character was an E0 escape; or with 0x80
@@ -88,6 +45,10 @@ kbdgetc(void)
 
   shift |= shiftcode[data];
   shift ^= togglecode[data];
+  msg.msg_type = M_KEY_DOWN;
+  msg.params[0] = normalmap[data];
+  msg.params[1] = shift;
+  handleMessage(&msg);
   c = charcode[shift & (CTL | SHIFT)][data];
   if(shift & CAPSLOCK){
     if('a' <= c && c <= 'z')
@@ -101,6 +62,8 @@ kbdgetc(void)
 void
 kbdintr(void)
 {
-  //consoleintr(kbdgetc);
-  kbdInterupt();
+//  consoleintr(kbdgetc);
+  acquire(&kbdlock);
+  kbdgetc();
+  release(&kbdlock);
 }

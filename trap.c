@@ -7,7 +7,6 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
-#include "mouse.h"
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -33,8 +32,6 @@ idtinit(void)
   lidt(idt, sizeof(idt));
 }
 
-extern void updateTimer();
-
 //PAGEBREAK: 41
 void
 trap(struct trapframe *tf)
@@ -54,19 +51,14 @@ trap(struct trapframe *tf)
     if(cpu->id == 0){
       acquire(&tickslock);
       ticks++;
+      timerintr(ticks);
       wakeup(&ticks);
       release(&tickslock);
     }
-    checkMouseMessage(ticks);
-    updateTimer();
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:
     ideintr();
-    lapiceoi();
-    break;  
-    case T_IRQ0 + IRQ_SOUND:
-    soundInterrupt();
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE+1:
@@ -77,7 +69,7 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_MOUSE:
-    mouseInterupt(ticks);
+    mouseintr(ticks);
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_COM1:

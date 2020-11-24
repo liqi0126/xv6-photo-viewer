@@ -3,6 +3,7 @@
 // SMP machines use the local APIC timer.
 
 #include "types.h"
+#include "msg.h"
 #include "defs.h"
 #include "traps.h"
 #include "x86.h"
@@ -21,14 +22,20 @@
 #define TIMER_RATEGEN   0x04    // mode 2, rate generator
 #define TIMER_16BIT     0x30    // r/w counter 16 bits, LSB first
 
-#define TIMER_INTERVAL 100
-
 void
 timerinit(void)
 {
   // Interrupt 100 times/sec.
   outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
-  outb(IO_TIMER1, TIMER_DIV(TIMER_INTERVAL) % 256);
-  outb(IO_TIMER1, TIMER_DIV(TIMER_INTERVAL) / 256);
+  outb(IO_TIMER1, TIMER_DIV(100) % 256);
+  outb(IO_TIMER1, TIMER_DIV(100) / 256);
   picenable(IRQ_TIMER);
+}
+
+int timerintr(uint tick) {
+  message msg;
+  msg.msg_type = M_TIMER;
+  msg.params[0] = tick;
+  handleMessage(&msg);
+  return 0;
 }
