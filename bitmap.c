@@ -32,7 +32,7 @@ int readBitmapFile(char *fileName, RGBA *result, int *height, int *width) {
     char tmpBytes[3];
     int rowBytes = column * bits / 8;
     char *buf = (char *) result;
-    for (i = 0; i < row; i++) {
+    for (i = row - 1; i >= 0; i--) {
         if (bits == 32) {
             read(bmpFile, buf + i * rowBytes, rowBytes);
         } else {
@@ -70,7 +70,7 @@ int read24BitmapFile(char *fileName, RGB *result, int *height, int *width) {
     char tmpBytes[3];
     int rowBytes = column * 3;
     char *buf = (char *) result;
-    for (i = 0; i < row; i++) {
+    for (i = row - 1; i >= 0; i--) {
         if (bits == 24) {
             read(bmpFile, buf + i * rowBytes, rowBytes);
         } else {
@@ -89,4 +89,3 @@ int read24BitmapFile(char *fileName, RGB *result, int *height, int *width) {
     close(bmpFile);
     return 0;
 }
-

@@ -42,7 +42,8 @@ int api_paint24Bitmap(Window* wnd, struct RGB* img, Point p, Size s)
             break;
         }
         t = wnd->content + (y + i) * wnd->size.w + x;
-        o = img + (s.h - i - 1) * s.w;
+        // o = img + (s.h - i - 1) * s.w;
+        o = img + i * s.w;
         memmove(t, o, max_line * 3);
     }
     return 0;
@@ -60,8 +61,8 @@ int api_paint24BitmapToContent(Window* wnd, struct RGB* img, Point pWnd, Point p
             /*break;*/
         /*}*/
         t = wnd->content + (pWnd.y + i) * wnd->size.w + pWnd.x;
-        // o = img + (s.h - i - 1) * s.w;
-        o = img + (sBmp.h - pBmp.y - 1 - i) * sBmp.w + pBmp.x;
+        // o = img + (sBmp.h - pBmp.y - 1 - i) * sBmp.w + pBmp.x;
+        o = img + (pBmp.y + i) * sBmp.w + pBmp.x;
         memmove(t, o, max_line * 3);
     }
     return 0;
@@ -78,7 +79,8 @@ Point pWnd, Point pBmp, Size sBmp, Size s)
         for(j = 0; j < s.w; ++j)
         {
             t = wnd->content + (pWnd.y + i) * wnd->size.w + pWnd.x + j;
-            o = img + (sBmp.h - pBmp.y - 1 - i) * sBmp.w + pBmp.x + j;
+            // o = img + (sBmp.h - pBmp.y - 1 - i) * sBmp.w + pBmp.x + j;
+            o = img + (pBmp.y + i) * sBmp.w + pBmp.x + j;
 
             if(o->R==255 && o->G == 255 && o->B==255)
                 continue;
