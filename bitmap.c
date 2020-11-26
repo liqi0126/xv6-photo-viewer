@@ -1,11 +1,10 @@
-#include "bitmap.h"
-
-#include "fcntl.h"
-#include "gui_base.h"
-#include "stat.h"
 #include "types.h"
+#include "stat.h"
+#include "fcntl.h"
 #include "user.h"
 #include "x86.h"
+#include "gui_base.h"
+#include "bitmap.h"
 
 void readBitmapHeader(int bmpFile, BITMAP_FILE_HEADER *bmpFileHeader, BITMAP_INFO_HEADER *bmpInfoHeader) {
     // Read Bitmap file header
@@ -32,7 +31,7 @@ int readBitmapFile(char *fileName, RGBA *result, int *height, int *width) {
     int bits = bmpInfoHeader.biBitCount;
     char tmpBytes[3];
     int rowBytes = column * bits / 8;
-    char *buf = (char *)result;
+    char *buf = (char *) result;
     for (i = row - 1; i >= 0; i--) {
         if (bits == 32) {
             read(bmpFile, buf + i * rowBytes, rowBytes);
@@ -70,7 +69,7 @@ int read24BitmapFile(char *fileName, RGB *result, int *height, int *width) {
     int bits = bmpInfoHeader.biBitCount;
     char tmpBytes[3];
     int rowBytes = column * 3;
-    char *buf = (char *)result;
+    char *buf = (char *) result;
     for (i = row - 1; i >= 0; i--) {
         if (bits == 24) {
             read(bmpFile, buf + i * rowBytes, rowBytes);
