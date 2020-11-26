@@ -89,3 +89,20 @@ int read24BitmapFile(char *fileName, RGB *result, int *height, int *width) {
     close(bmpFile);
     return 0;
 }
+
+int write24BitmapFile(char *filename, RGB *img, int height, int width) {
+    int bmpFile = open(filename, O_CREATE | O_RDWR);
+    int rowBytes = width * 3;
+    char tmpBytes[3] = {0, 0, 0};
+
+    write24BitmapFileHeader(bmpFile, height, width);
+    for (int i = height - 1; i >= 0; i--) {
+        write(bmpFile, img + i * width, rowBytes);
+        if (rowBytes % 4 > 0) {
+            write(bmpFile, tmpBytes, 4 - (rowBytes % 4));
+        }
+    }
+
+    close(bmpFile);
+    return 0;
+}

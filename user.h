@@ -58,6 +58,7 @@ int atoi(const char*);
 // bitmap.c
 int readBitmapFile(char *, struct RGBA *, int *, int *);
 int read24BitmapFile(char *, struct RGB *, int *, int *);
+int write24BitmapFile(char *, struct RGB *, int, int);
 
 // xv6_api.c
 int api_createwindow(struct Window *);
