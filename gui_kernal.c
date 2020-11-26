@@ -21,6 +21,10 @@ struct spinlock guiKernelLock;
 int mouseDownInContent = 0;
 int mouseDownInBar = 0;
 
+enum mouseInWinPos {
+    NOT_IN, CONTENT, BAR, CLOSE_BTN
+};
+
 int min(int a, int b) {
     return (a > b) ? b : a;
 }
@@ -47,16 +51,16 @@ int mouseInWin(int px, int py, int hwnd)
     Rect * bar = &wndInfoList[hwnd].wndTitleBar;
 
     if(px <= body->x || px >= (body->x + body->w))
-        return 0;
+        return NOT_IN;
 
     if(py > body->y && py <(body->y + body->h))
-        return 1;
+        return CONTENT;
     if(py > bar->y && py < (bar->y + bar->h))
     {
         if(px > body->x && px < body->x + body->w - 30)
-            return 2;
+            return BAR;
         else
-            return 3;
+            return CLOSE_BTN;
     }
 
     return 0;
@@ -270,16 +274,16 @@ guiKernelHandleMsg(message *msg)
         drawMouse(screen, 0, mousePos.x, mousePos.y);
         break;
     case M_MOUSE_DOWN:
-        tempR = 0;
+        tempR = NOT_IN;
         for (i = wndCount - 1; i >= 0; i--) {
             tempR = mouseInWin(mousePos.x, mousePos.y, focusList[i]);
-            if(tempR != 0)
+            if(tempR != NOT_IN)
                 break;
         }
-        if(tempR == 1) {
+        if(tempR == CONTENT) {
             mouseDownInContent = 1;
         }
-        if(tempR == 2) {
+        if(tempR == BAR) {
             mouseDownInBar = 1;
         }
         if (focus != focusList[i]) {
@@ -289,7 +293,7 @@ guiKernelHandleMsg(message *msg)
         tempMsg.params[0] = mousePos.x - wndInfoList[focus].wndBody.x;
         tempMsg.params[1] = mousePos.y - wndInfoList[focus].wndBody.y;
         dispatchMessage(focus, &tempMsg);
-        if (tempR == 3) {
+        if (tempR == CLOSE_BTN) {
             tempMsg.msg_type = M_CLOSE_WINDOW;
             dispatchMessage(focus, &tempMsg);
         }
