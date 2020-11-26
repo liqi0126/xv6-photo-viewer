@@ -15,8 +15,10 @@ Window wnd;
 #define  IconSize 80
 char * appName[] = {"test.bmp", "plane.bmp",
     "clock.bmp", "editor.bmp", "painter.bmp"};
+char save_filename[] = "images.bmp";
 Point appPos[AppCount];
 RGB IconBuffer[IconSize * IconSize];
+RGB save_icon[148*341];
 
 int flag = 0;
 void MsgProc(struct message * msg)
@@ -96,6 +98,9 @@ void desktopInit()
         api_paint24BitmapToContent(&wnd, IconBuffer, appPos[i], (Point){0, 0},(Size){80,80}, (Size){80,80});
        // api_paint24Bitmap(&wnd, IconBuffer, appPos[i],(Size){55,40});
     }
+    int h, w;
+    read24BitmapFile(save_filename, save_icon, &h, &w);
+    api_paint24BitmapToContent(&wnd, save_icon, (Point){140,0}, (Point){0,0}, (Size){148,341},(Size){148,341});
 }
 
 int
@@ -115,8 +120,6 @@ main(void)
     read24BitmapFile(filename, background, &h, &w);
 
     api_paint24Bitmap(&wnd, background,(Point){0,0}, (Size){600, 800});
-    //api_paint24BitmapToContent(&wnd, background, (Point){0,0}, (Point){0,0},
-    //        (Size){600, 800}, (Size){600, 800});
     desktopInit();
     api_repaint(&wnd);
     printf(1, "safe here\n");
