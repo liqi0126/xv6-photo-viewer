@@ -13,32 +13,6 @@ void readBitmapHeader(int bmpFile, BITMAP_FILE_HEADER *bmpFileHeader, BITMAP_INF
     read(bmpFile, bmpInfoHeader, sizeof(BITMAP_INFO_HEADER));
 }
 
-void write24BitmapFileHeader(int bmpFile, int height, int width) {
-    int rowSize = (24 * width + 31) / 32 * 4;  // zero padding
-    BITMAP_FILE_HEADER bmpFileHeader;
-    bmpFileHeader.bfType = 0x4D42;  // "BM"
-    bmpFileHeader.bfSize = rowSize * height + 54;
-    bmpFileHeader.bfReserved1 = 0;
-    bmpFileHeader.bfReserved2 = 0;
-    bmpFileHeader.btOffBits = 54;  // size of header
-
-    BITMAP_INFO_HEADER bmpInfoHeader;
-    bmpInfoHeader.biSize = 40;  // header size
-    bmpInfoHeader.biWidth = width;
-    bmpInfoHeader.biHeight = height;
-    bmpInfoHeader.biPlanes = 1;
-    bmpInfoHeader.biBitCount = 24;
-    bmpInfoHeader.biCompression = 0;               // No Compression
-    bmpInfoHeader.biSizeImage = rowSize * height;  // TODO:
-    bmpInfoHeader.biXPelsPerMeter = 0;             //TODO:
-    bmpInfoHeader.biYPelsPerMeter = 0;             //TODO:
-    bmpInfoHeader.biCirUserd = 0;
-    bmpInfoHeader.biCirImportant = 0;
-
-    write(bmpFile, &bmpFileHeader, sizeof(BITMAP_FILE_HEADER));
-    write(bmpFile, &bmpInfoHeader, sizeof(BITMAP_INFO_HEADER));
-}
-
 int readBitmapFile(char *fileName, RGBA *result, int *height, int *width) {
     int i;
     int bmpFile = open(fileName, 0);

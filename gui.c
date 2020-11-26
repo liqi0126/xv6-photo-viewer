@@ -33,7 +33,7 @@ void initGUI() {
     screen_buf = (RGB*)(baseAdd + screen_size * 2);
     initlock(&screen_lock, "screen");
     initlock(&screen_wo_focus_lock, "screen_wo_focus");
-    initlock(&screen_buf, "screen_buf");
+    initlock(&screen_buf_lock, "screen_buf");
 
     mouse_color[0].G = 0;
     mouse_color[0].B = 0;
