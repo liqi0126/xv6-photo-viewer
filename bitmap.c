@@ -24,6 +24,8 @@ int readBitmapFile(char *fileName, RGBA *result, int *height, int *width) {
     BITMAP_INFO_HEADER bmpInfoHeader;
 
     readBitmapHeader(bmpFile, &bmpFileHeader, &bmpInfoHeader);
+    char headerbuf[100];
+    read(bmpFile, headerbuf, bmpFileHeader.btOffBits - 54); // read out the extra header
     *width = bmpInfoHeader.biWidth;
     *height = bmpInfoHeader.biHeight;
     int column = bmpInfoHeader.biWidth;
@@ -62,6 +64,8 @@ int read24BitmapFile(char *fileName, RGB *result, int *height, int *width) {
     BITMAP_INFO_HEADER bmpInfoHeader;
 
     readBitmapHeader(bmpFile, &bmpFileHeader, &bmpInfoHeader);
+    char headerbuf[100];
+    read(bmpFile, headerbuf, bmpFileHeader.btOffBits - 54); // read out the extra header
     *width = bmpInfoHeader.biWidth;
     *height = bmpInfoHeader.biHeight;
     int column = bmpInfoHeader.biWidth;
