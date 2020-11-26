@@ -33,13 +33,6 @@ int abs(int a) {
     return (a >= 0)? a: -a;
 }
 
-int testXXX(RGB * p)
-{
-    cprintf("%d %d %d", p->R, p->G, p->B);
-    cprintf("Test XXX\n");
-    return 0;
-}
-
 // return 0 not in return 1 in content return 2 in bar
 int mouseInWin(int px, int py, int hwnd)
 {
