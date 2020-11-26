@@ -5,11 +5,11 @@ PColor * getColor(PBitmap* pic, int x, int y, int *isInPic){
     if(x<0||x>pic->width||y<0||y>pic->height)
     {
         isInPic = 0;
-        return &pic->data[0][0];
+        return (pic->data);
     }
 
     isInPic = 1;
-    return &pic->data[x][y];
+    return (pic->data + x * pic->width + y);
     
 }
 
@@ -52,7 +52,7 @@ int PicScale(PBitmap* src, PBitmap* dst)
     {
         for(int y = 0; y < dst->height; y++)
         {
-            mixColor(src, x * xScale, y * yScale, &dst->data[x][y]);
+            mixColor(src, x * xScale, y * yScale, (dst->data+ x * dst->width + y));
         }
     }
     

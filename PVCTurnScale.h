@@ -18,5 +18,6 @@ typedef struct PBitmap
 
 int PicScale(PBitmap* src, PBitmap* dst);
 
+float cos(int angle);
 
 #endif PVCTURNSCALE_H

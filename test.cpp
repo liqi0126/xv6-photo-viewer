@@ -119,8 +119,11 @@ void PrintBMP()
 
 int main(){
 	readBmp();
-    
-    PicScale(imagedata,)
+    PBitmap dstimage;
+	dstimage.data=(PColor*)malloc(imagedata.width*2*imagedata.height*2*sizeof(PColor));
+	dstimage.width=imagedata.width;
+	dstimage.height=imagedata.height;
+    PicScale(&imagedata,&dstimage);
     PrintBMP();
 	return 1;
 
