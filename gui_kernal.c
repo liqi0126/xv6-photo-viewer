@@ -166,12 +166,10 @@ int repaintAllWindow(int hwnd)
     int i;
     for (i = 0; i < wndCount; ++i) {
         switchuvm(wndInfoList[focusList[i]].procPtr);
-       // drawWndTitleBar(screen_buf2, i);
-        drawRGBContentToContent(screen_buf2, wndInfoList[focusList[i]].wholeContent, wndInfoList[focusList[i]].wndBody.x,
+        drawRGBContentToContent(screen_buf, wndInfoList[focusList[i]].wholeContent, wndInfoList[focusList[i]].wndBody.x,
                 wndInfoList[focusList[i]].wndTitleBar.y, wndInfoList[focusList[i]].wndBody.w, wndInfoList[focusList[i]].wndBody.h + 30);
         if (i == wndCount - 2) {
-            // drawWndTitleBar(screen_buf1, i);
-            drawScreenToScreen(screen_buf1, screen_buf2);
+            drawScreenToScreen(screen_wo_focus, screen_buf);
         }
         if (proc == 0) {
             switchkvm();
@@ -179,7 +177,7 @@ int repaintAllWindow(int hwnd)
             switchuvm(proc);
         }
     }
-    drawScreenToScreen(screen, screen_buf2);
+    drawScreenToScreen(screen, screen_buf);
     drawMouse(screen, 0, mousePos.x, mousePos.y);
     return 0;
 }
@@ -242,16 +240,16 @@ guiKernelHandleMsg(message *msg)
             WndInfo* wnd = &wndInfoList[focus];
             int nx = wndInfoList[focus].wndTitleBar.x + dx;
             int ny = wndInfoList[focus].wndTitleBar.y + dy;
-            drawRGBContentToContentPart(screen_buf2, screen_buf1, wnd->wndTitleBar.x, wnd->wndTitleBar.y,
+            drawRGBContentToContentPart(screen_buf, screen_wo_focus, wnd->wndTitleBar.x, wnd->wndTitleBar.y,
                                         wnd->wndTitleBar.x, wnd->wndTitleBar.y, SCREEN_HEIGHT, SCREEN_WIDTH,
                                         wnd->wndBody.h + 30, wnd->wndBody.w);
             switchuvm(wndInfoList[focus].procPtr);
-            drawRGBContentToContent(screen_buf2, wnd->wholeContent, nx, ny, wnd->wndBody.w, wnd->wndBody.h + 30);
+            drawRGBContentToContent(screen_buf, wnd->wholeContent, nx, ny, wnd->wndBody.w, wnd->wndBody.h + 30);
             int bx = min(wnd->wndTitleBar.x, nx);
             int bw = wnd->wndBody.w + abs(dx);
             int by = min(wnd->wndTitleBar.y, ny);
             int bh = wnd->wndBody.h + abs(dy) + 30;
-            drawRGBContentToContentPart(screen, screen_buf2, bx, by, bx, by, SCREEN_HEIGHT, SCREEN_WIDTH, bh, bw);
+            drawRGBContentToContentPart(screen, screen_buf, bx, by, bx, by, SCREEN_HEIGHT, SCREEN_WIDTH, bh, bw);
             wnd->wndTitleBar.x += dx;
             wnd->wndTitleBar.y += dy;
             wnd->wndBody.x += dx;
@@ -268,7 +266,7 @@ guiKernelHandleMsg(message *msg)
             tempMsg.params[1] = mousePos.y - wndInfoList[focus].wndBody.y;
             dispatchMessage(focus, &tempMsg);
         }
-        clearMouse(screen, screen_buf2,lastMousePos.x, lastMousePos.y);
+        clearMouse(screen, screen_buf,lastMousePos.x, lastMousePos.y);
         drawMouse(screen, 0, mousePos.x, mousePos.y);
         break;
     case M_MOUSE_DOWN:
@@ -375,8 +373,8 @@ void setRect(struct Rect *rect, int x, int y, int w, int h)
 
 void initDesktop() {
     drawRGBContentToContent(screen, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    drawRGBContentToContent(screen_buf1, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    drawRGBContentToContent(screen_buf2, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    drawRGBContentToContent(screen_wo_focus, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    drawRGBContentToContent(screen_buf, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 int sys_createwindow(void)
@@ -432,7 +430,7 @@ int sys_repaintwindow()
     if (hwnd == focus) {
         switchuvm(wndInfoList[focus].procPtr);
         WndInfo* wnd = &wndInfoList[focus];
-        drawRGBContentToContent(screen_buf2, wnd->wholeContent, wnd->wndTitleBar.x, wnd->wndTitleBar.y, wnd->wndBody.w, wnd->wndBody.h + 30);
+        drawRGBContentToContent(screen_buf, wnd->wholeContent, wnd->wndTitleBar.x, wnd->wndTitleBar.y, wnd->wndBody.w, wnd->wndBody.h + 30);
         drawRGBContentToContent(screen, wnd->wholeContent, wnd->wndTitleBar.x, wnd->wndTitleBar.y, wnd->wndBody.w, wnd->wndBody.h + 30);
         if (proc == 0) {
             switchkvm();
@@ -488,7 +486,7 @@ int updateWindow(int hwnd, int x, int y, int w, int h)
     /*void drawRGBContentToContentPart(RGB *buf, RGB *img, int x, int y,*/
     /*int bx, int by, int bh, int bw, int h, int w)*/
 
-    drawRGBContentToContentPart(screen_buf2, wnd->content, x, y, bx, by, bh, bw, h, w);
+    drawRGBContentToContentPart(screen_buf, wnd->content, x, y, bx, by, bh, bw, h, w);
     drawRGBContentToContentPart(screen, wnd->content, x, y, bx, by, bh, bw, h, w);
 
     return 0;

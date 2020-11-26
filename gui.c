@@ -15,12 +15,12 @@
 /*ushort SCREEN_HEIGHT;*/
 /*int screen_size;*/
 struct spinlock screen_lock;
-struct spinlock buf1_lock;
-struct spinlock buf2_lock;
+struct spinlock screen_wo_focus_lock;
+struct spinlock screen_buf_lock;
 
 RGB *screen = 0;
-RGB *screen_buf1 = 0;
-RGB *screen_buf2 = 0;
+RGB *screen_wo_focus = 0; // this is the screen without focused window
+RGB *screen_buf = 0;
 
 void initGUI() {
     uint GraphicMem = KERNBASE + 0x1028;
@@ -29,11 +29,11 @@ void initGUI() {
     SCREEN_WIDTH = *((ushort*)(KERNBASE + 0x1012));
     SCREEN_HEIGHT = *((ushort*)(KERNBASE + 0x1014));
     screen_size = (SCREEN_WIDTH * SCREEN_HEIGHT) * 3;
-    screen_buf1 = (RGB*)(baseAdd + screen_size);
-    screen_buf2 = (RGB*)(baseAdd + screen_size * 2);
+    screen_wo_focus = (RGB*)(baseAdd + screen_size);
+    screen_buf = (RGB*)(baseAdd + screen_size * 2);
     initlock(&screen_lock, "screen");
-    initlock(&buf1_lock, "buffer_1");
-    initlock(&buf2_lock, "buffer_2");
+    initlock(&screen_wo_focus_lock, "screen_wo_focus");
+    initlock(&screen_buf, "screen_buf");
 
     mouse_color[0].G = 0;
     mouse_color[0].B = 0;
@@ -51,20 +51,20 @@ void initGUI() {
 void acquireGUILock(RGB *buf) {
     if (buf == screen) {
         acquire(&screen_lock);
-    } else if (buf == screen_buf1) {
-        acquire(&buf1_lock);
-    } else if (buf == screen_buf2) {
-        acquire(&buf2_lock);
+    } else if (buf == screen_wo_focus) {
+        acquire(&screen_wo_focus_lock);
+    } else if (buf == screen_buf) {
+        acquire(&screen_buf_lock);
     }
 }
 
 void releaseGUILock(RGB *buf) {
     if (buf == screen) {
         release(&screen_lock);
-    } else if (buf == screen_buf1) {
-        release(&buf1_lock);
-    } else if (buf == screen_buf2) {
-        release(&buf2_lock);
+    } else if (buf == screen_wo_focus) {
+        release(&screen_wo_focus_lock);
+    } else if (buf == screen_buf) {
+        release(&screen_buf_lock);
     }
 }
 
@@ -94,7 +94,7 @@ void drawPointAlpha(RGB* color, RGBA origin) {
 int drawCharacter(RGB *buf, int x, int y, char ch, RGBA color) {
     int i, j;
     RGB *t;
-    int ord = ch - 0x20;
+    int ord = ch - 0x20; // omit control ASCII code.
     if (ord < 0 || ord >= (CHARACTER_NUMBER - 1)) {
         return -1;
     }

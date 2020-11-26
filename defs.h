@@ -18,8 +18,8 @@ void            initGUIKernel(void);
 
 // gui.c
 extern struct RGB* screen;
-extern struct RGB* screen_buf1;
-extern struct RGB* screen_buf2;
+extern struct RGB* screen_wo_focus;
+extern struct RGB* screen_buf;
 void            drawMouse(struct RGB *buf, int mode, int x, int y);
 void            clearMouse(struct RGB *buf, struct RGB *temp_buf, int x, int y);
 void            initGUI(void);
