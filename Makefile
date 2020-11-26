@@ -197,6 +197,22 @@ IMGS=desktop.bmp\
      enemy_middle.bmp\
      enemy_small.bmp\
      hero.bmp\
+	 save-w5.bmp\
+	 delete-w3.bmp\
+	 pen-w3.bmp\
+	 rubber-w3.bmp\
+	 cut-w3.bmp\
+	 zoomin-w3.bmp\
+	 zoomout-w2.bmp\
+	 red-circle-w6.bmp\
+	 green-w2.bmp\
+	 blue-w2.bmp\
+	 purple-w2.bmp\
+	 90-left-w3.bmp\
+	 90-right-w4.bmp\
+	 30-left-w3.bmp\
+	 30-right-w3.bmp\
+	 images.bmp\
      0.bmp\
      1.bmp\
      2.bmp\
