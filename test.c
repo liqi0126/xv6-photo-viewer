@@ -1,7 +1,6 @@
 //Desktop
 
 #include "types.h"
-#include "color.h"
 #include "user.h"
 #include "fcntl.h"
 #include "msg.h"
@@ -10,7 +9,8 @@
 
 
 //define the xv6 param
-#include "xv6_api.h"
+#include "gui_base.h"
+
 Window wnd;
 
 RGB* save_icon;

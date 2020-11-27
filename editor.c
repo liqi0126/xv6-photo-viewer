@@ -1,9 +1,8 @@
 #include "types.h"
-#include "color.h"
 #include "user.h"
 #include "fcntl.h"
 #include "msg.h"
-#include "xv6_api.h"
+#include "gui_base.h"
 #include "kbd.h"
 Window wnd;
 int pos_x = 0;

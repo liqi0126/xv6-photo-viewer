@@ -1,5 +1,4 @@
 #include "types.h"
-#include "xv6_api.h"
 #include "user.h"
 #include "gui_base.h"
 #include "msg.h"
