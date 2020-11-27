@@ -1,3 +1,7 @@
+
+#ifndef GUI_KERNEL_H
+#define GUI_KERNEL_H
+
 #ifndef __ASSEMBLER__
 
 #define MAX_MSG_COUNT 50
@@ -53,4 +57,6 @@ typedef struct TimerInfo {
     int intervalList[MAX_WINDOW_COUNT];
     int countList[MAX_WINDOW_COUNT];
 } TimerInfo;
+
+#endif
 #endif

@@ -11,13 +11,38 @@ struct superblock;
 struct RGB;
 struct RGBA;
 struct message;
+struct Point;
+struct Size;
 
 // gui_kernal.c
 void            guiKernelHandleMsg(struct message *);
 void            initGUIKernel(void);
 
+// gui_base.h
+void drawPoint(struct RGB* , struct RGB);
+void drawPointAlpha(struct RGB* , struct RGBA);
+void drawCharacter(struct RGB *, struct Point, struct Size, char, struct RGBA);
+void drawString(struct RGB *, struct Point, struct Size, char *, struct RGBA);
+void drawRect(struct RGB *, struct Point, struct Size, struct RGB, struct Size);
+void drawBitmap(struct RGB* , struct RGB* , struct Point, struct Point, struct Size, struct Size, struct Size);
+void drawTransparentBitmap(struct RGB*, struct RGB*, struct Point, struct Point, struct Size, struct Size, struct Size);
+void copyContent(struct RGB*, struct RGB*, struct Point, struct Size, struct Size);
+void drawMouse(struct RGB *, int, int, int);
+
 // gui_screen.c
-void            initGUI(void);
+extern struct RGB* screen;
+extern struct RGB* screen_wo_focus;
+extern struct RGB* screen_buf;
+void initGUI(void);
+void drawCharacterToScreen(struct RGB *, struct Point, struct Size, char, struct RGBA);
+void drawStringToScreen(struct RGB *, struct Point, struct Size, char *, struct RGBA);
+void drawBitmapToScreen(struct RGB *, struct RGB *, struct Point, struct Size);
+void drawPartBitmapToScreen(struct RGB *, struct RGB *, struct Point, struct Point, struct Size, struct Size);
+void drawTransparentBitmapToScreen(struct RGB *, struct RGB *, struct Point, struct Size);
+void drawMouseToScreen(struct RGB *, int, int, int);
+void drawScreenToScreen(struct RGB*, struct RGB*);
+void clearMouse(struct RGB *, struct RGB *, int, int);
+
 
 // bio.c
 void            binit(void);

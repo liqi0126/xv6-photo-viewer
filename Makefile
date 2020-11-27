@@ -29,8 +29,10 @@ OBJS = \
 	vm.o\
 	msg.o\
 	mouse.o\
-	gui.o\
+	mouse_shape.o\
+	gui_base.o\
 	gui_kernal.o\
+	gui_screen.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf

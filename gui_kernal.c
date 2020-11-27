@@ -9,7 +9,6 @@
 
 #include "gui_base.h"
 #include "gui_kernal.h"
-#include "gui_screen.h"
 
 struct spinlock guiKernelLock;
 
@@ -89,7 +88,7 @@ int drawWndTitleBar(int hwnd)
         o = buf +  i * w + w - h ;
         memset(o, 0,  h * 3);
     }
-    drawStringToContent(buf, 10, 5, w,h,wnd->title, (RGBA){255, 255, 255, 255});
+    drawStringToScreen(buf, (Point){10, 5}, (Size){h, w}, wnd->title, (RGBA){255, 255, 255, 255});
     return 0;
 }
 

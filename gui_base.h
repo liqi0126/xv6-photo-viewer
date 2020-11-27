@@ -54,15 +54,6 @@ typedef struct Window {
     struct RGB* wholeContent;
 } Window;
 
-void drawPoint(RGB* color, RGB origin);
-void drawPointAlpha(RGB* color, RGBA origin);
-void drawCharacter(RGB *buf, Size s, Point p, char ch, RGBA color);
-void drawString(RGB *buf, Size s, Point p, char *str, RGBA color);
-void drawRect(RGB *buf, Point p, Size s, RGB color, Size rect_size);
-void drawBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc, Size st, Size sc, Size s);
-void drawTransparentBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc, Size st, Size sc, Size s);
-void copyContent(RGB* tgt, RGB* src, Point p, Size s, Size copy_size);
-void drawMouse(RGB *buf, int mode, int x, int y);
 
 #endif
 #endif

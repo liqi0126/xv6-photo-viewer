@@ -7,8 +7,6 @@
 #include "x86.h"
 #include "spinlock.h"
 #include "gui_base.h"
-#include "character.h"
-#include "bitmap.h"
 #include "mouse_shape.h"
 
 struct spinlock screen_lock;
@@ -65,15 +63,15 @@ void releaseGUILock(RGB *buf) {
     }
 }
 
-void drawCharacterToScreen(RGB *buf, Size s, Point p, char ch, RGBA color) {
+void drawCharacterToScreen(RGB *buf, Point p, Size s, char ch, RGBA color) {
     acquireGUILock(buf);
-    drawCharacter(buf, s, p, ch, color);
+    drawCharacter(buf, p, s, ch, color);
     releaseGUILock(buf);
 }
 
-void drawStringToScreen(RGB *buf, Size s, Point p, char *str, RGBA color) {
+void drawStringToScreen(RGB *buf, Point p, Size s, char *str, RGBA color) {
     acquireGUILock(buf);
-    drawString(buf, s, p, str, color);
+    drawString(buf, p, s, str, color);
     releaseGUILock(buf);
 }
 
