@@ -1,9 +1,8 @@
 #include "types.h"
-#include "color.h"
 #include "user.h"
 #include "fcntl.h"
 #include "msg.h"
-#include "xv6_api.h"
+#include "gui_base.h"
 Window wnd;
 #define PLANE_HEIGHT 47
 #define PLANE_WIDTH 45

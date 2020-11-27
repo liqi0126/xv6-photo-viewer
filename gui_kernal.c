@@ -3,7 +3,6 @@
 #include "param.h"
 #include "defs.h"
 #include "msg.h"
-#include "xv6_api.h"
 #include "spinlock.h"
 #include "gui_base.h"
 #include "gui_kernal.h"

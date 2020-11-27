@@ -1,9 +1,9 @@
 // Shell.
 
 #include "types.h"
-#include "color.h"
 #include "user.h"
 #include "fcntl.h"
+#include "gui_base.h"
 
 // Parsed command representation
 #define EXEC  1

@@ -7,7 +7,11 @@
 
 ushort SCREEN_WIDTH;
 ushort SCREEN_HEIGHT;
-int screen_size;
+int screen_size; 
+
+#define USCREEN_WIDTH 800
+#define USCREEN_HEIGHT 600
+#define UTITLE_HEIGHT 30
 
 // 24 bit RGB. used in GUI Utility
 typedef struct RGB {
@@ -23,6 +27,32 @@ typedef struct RGBA {
     unsigned char G;
     unsigned char R;
 } RGBA;
+
+typedef struct Rect {
+    int x;
+    int y;
+    int h;
+    int w;
+} Rect;
+
+typedef struct Point {
+    int x;
+    int y;
+} Point;
+
+typedef struct Size {
+    int h;
+    int w;
+} Size;
+
+typedef struct Window {
+    int hwnd;
+    Point pos;
+    Size size;
+    char* title;
+    struct RGB* content;
+    struct RGB* wholeContent;
+} Window;
 
 #endif
 #endif
