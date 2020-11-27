@@ -9,9 +9,9 @@ ushort SCREEN_WIDTH;
 ushort SCREEN_HEIGHT;
 int screen_size; 
 
-#define USCREEN_WIDTH 800
-#define USCREEN_HEIGHT 600
 #define UTITLE_HEIGHT 30
+#define USCREEN_HEIGHT 600
+#define USCREEN_WIDTH 800
 
 // 24 bit RGB. used in GUI Utility
 typedef struct RGB {

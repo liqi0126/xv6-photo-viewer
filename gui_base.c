@@ -110,6 +110,9 @@ void drawBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc, Size st, 
     }
 
     for (int i = 0; i < draw_h; i++) {
+        if (pt.y + i < 0 || pt.y + i >= st.h) {
+            continue;
+        }
         t = tgt + (pt.y + i) * st.w + pt.x;
         o = cont + (pc.y + i) * sc.w + pc.x;
         memmove(t, o, draw_w * 3);

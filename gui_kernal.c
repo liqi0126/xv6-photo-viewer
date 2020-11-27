@@ -59,7 +59,7 @@ int mouseInWin(int px, int py, int hwnd)
         return CONTENT;
     if(py > bar->y && py < (bar->y + bar->h))
     {
-        if(px > body->x && px < body->x + body->w - 30)
+        if(px > body->x && px < body->x + body->w - UTITLE_HEIGHT)
             return BAR;
         else
             return CLOSE_BTN;
@@ -71,6 +71,12 @@ int mouseInWin(int px, int py, int hwnd)
 /*********************************************************
  * Paint Functions
 **********************************************************/
+void initDesktop() {
+    drawBitmapToScreen(screen, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
+    drawBitmapToScreen(screen_wo_focus, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
+    drawBitmapToScreen(screen_buf, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
+}
+
 // TODO:
 int drawWndTitleBar(int hwnd)
 {
@@ -98,8 +104,8 @@ int repaintAllWindow(int hwnd)
     for (i = 0; i < wndCount; ++i) {
         switchuvm(wndInfoList[focusList[i]].procPtr);
         drawBitmapToScreen(screen_buf, wndInfoList[focusList[i]].wholeContent, 
-        (Point){wndInfoList[focusList[i]].wndBody.x, wndInfoList[focusList[i]].wndBody.y},
-        (Size){wndInfoList[focusList[i]].wndBody.w, wndInfoList[focusList[i]].wndBody.h + 30});
+        (Point){wndInfoList[focusList[i]].wndTitleBar.x, wndInfoList[focusList[i]].wndTitleBar.y},
+        (Size){wndInfoList[focusList[i]].wndBody.h + wndInfoList[focusList[i]].wndTitleBar.h, wndInfoList[focusList[i]].wndBody.w});
         if (i == wndCount - 2) {
             drawScreenToScreen(screen_wo_focus, screen_buf);
         }
@@ -163,11 +169,6 @@ int updateWindow(int hwnd, int x, int y, int w, int h)
 /*********************************************************
  * Initialization
 **********************************************************/
-void initDesktop() {
-    drawBitmapToScreen(screen, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
-    drawBitmapToScreen(screen_wo_focus, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
-    drawBitmapToScreen(screen_buf, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
-}
 
 void initGUIKernel() {
     for(int i = 0; i < MAX_WINDOW_COUNT; ++i)
@@ -274,11 +275,11 @@ void guiKernelHandleMsg(message *msg)
             drawPartBitmapToScreen(screen_buf, screen_wo_focus, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y},
             (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
             switchuvm(wndInfoList[focus].procPtr);
-            drawBitmapToScreen(screen_buf, wnd->wholeContent, (Point){nx, ny}, (Size){wnd->wndBody.w, wnd->wndBody.h + wnd->wndTitleBar.h});
+            drawBitmapToScreen(screen_buf, wnd->wholeContent, (Point){nx, ny}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
             int bx = min(wnd->wndTitleBar.x, nx);
             int bw = wnd->wndBody.w + abs(dx);
             int by = min(wnd->wndTitleBar.y, ny);
-            int bh = wnd->wndBody.h + abs(dy) + 30;
+            int bh = wnd->wndBody.h + abs(dy) + UTITLE_HEIGHT;
             drawPartBitmapToScreen(screen, screen_buf, (Point){bx, by}, (Point){bx, by}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH}, (Size){bh, bw});
             wnd->wndTitleBar.x += dx;
             wnd->wndTitleBar.y += dy;
@@ -418,11 +419,11 @@ int sys_createwindow(void)
         if(wndInfoList[i].hwnd == -1)
         {
             wndInfoList[i].hwnd = i;
-            setRect(&wndInfoList[i].wndTitleBar, x, y - 30, cx, 30);
-            setRect(&wndInfoList[i].wndBody,x, y, cx, cy);
+            setRect(&wndInfoList[i].wndTitleBar, x, y - UTITLE_HEIGHT, cx, UTITLE_HEIGHT);
+            setRect(&wndInfoList[i].wndBody, x, y, cx, cy);
             wndInfoList[i].procPtr = proc;
             wndInfoList[i].wholeContent = content;
-            wndInfoList[i].content = content + 30 * cx;
+            wndInfoList[i].content = content + UTITLE_HEIGHT * cx;
             wndInfoList[i].title = title;
             drawWndTitleBar(i);
             initMsgQueue(&wndInfoList[i].msgQ);
@@ -448,8 +449,9 @@ int sys_repaintwindow()
     if (hwnd == focus) {
         switchuvm(wndInfoList[focus].procPtr);
         WndInfo* wnd = &wndInfoList[focus];
-        drawBitmapToScreen(screen_buf, wnd->wholeContent, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.h});
-        drawBitmapToScreen(screen, wnd->wholeContent, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.h});
+        // printf(1, "titlebar:(%d, %d)\n", wnd->wndTitleBar.x, wnd->wndTitleBar.y);
+        drawBitmapToScreen(screen_buf, wnd->wholeContent, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
+        drawBitmapToScreen(screen, wnd->wholeContent, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
         if (proc == 0) {
             switchkvm();
         } else {

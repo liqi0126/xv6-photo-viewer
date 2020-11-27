@@ -41,7 +41,6 @@ int api_paint24Bitmap(Window* wnd, struct RGB* img, Point p, Size s)
             break;
         }
         t = wnd->content + (y + i) * wnd->size.w + x;
-        // o = img + (s.h - i - 1) * s.w;
         o = img + i * s.w;
         memmove(t, o, max_line * 3);
     }
