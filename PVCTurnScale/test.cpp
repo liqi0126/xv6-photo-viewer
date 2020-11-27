@@ -81,7 +81,7 @@ void readBmp()
 
 		imagedata.width = strInfo.biWidth;
 		imagedata.height = strInfo.biHeight;
-		imagedata.data = (struct PColor*)malloc(imagedata.height * imagedata.width * sizeof(struct PColor));
+		imagedata.data = (struct RGB*)malloc(imagedata.height * imagedata.width * sizeof(struct RGB));
 
 
 
@@ -98,7 +98,7 @@ void readBmp()
 
 		//fseek(fpi,54,SEEK_SET);
 		//读出图片的像素数据
-		fread(imagedata.data, sizeof(struct PColor) * imagedata.width, imagedata.height, fpi);
+		fread(imagedata.data, sizeof(struct RGB) * imagedata.width, imagedata.height, fpi);
 		fclose(fpi);
 	}
 	else
@@ -131,23 +131,24 @@ void PrintBMP(PBitmap *dstimage)
 	fwrite(&strInfo, 1, sizeof(tagBITMAPINFOHEADER), fpw);
 
 
-    fwrite(dstimage->data, sizeof(struct PColor) * dstimage->width, dstimage->height, fpw);
+    fwrite(dstimage->data, sizeof(struct RGB) * dstimage->width, dstimage->height, fpw);
 
 	fclose(fpw);
 }
 
 
-
+/*
 int main(){
 	readBmp();
     PBitmap dstimage;
 	dstimage.width = (int) (imagedata.width );
 	dstimage.height = (int) (imagedata.height );
 	//getTurnSize(&dstimage.width, &dstimage.height, PI/2);
-	dstimage.data=(PColor*)malloc(dstimage.width * dstimage.height * sizeof(PColor));
+	dstimage.data=(RGB*)malloc(dstimage.width * dstimage.height * sizeof(RGB));
     //picScale(&imagedata,&dstimage);
 	//picTurn(&imagedata, &dstimage, PI*1.5);
 	picTurnAround(&imagedata, &dstimage);
     PrintBMP(&dstimage);
 	return 0;
 }
+*/

@@ -22,6 +22,7 @@
     <ClInclude Include="..\PVCTurnScale.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\main.c" />
     <ClCompile Include="..\math.c" />
     <ClCompile Include="..\PVCTurnScale.c" />
     <ClCompile Include="..\test.cpp" />

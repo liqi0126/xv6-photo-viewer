@@ -1,24 +1,24 @@
 #ifndef PVCTURNSCALE_H
 #define PVCTURNSCALE_H
 
-typedef struct PColor
+typedef struct RGB
 {
     unsigned char r;
     unsigned char g;
     unsigned char b;
-}PColor;
+}RGB;
 
 typedef struct PBitmap
 {
     int width;
     int height;
-    PColor * data;
+    RGB * data;
 }PBitmap;
 
 
 int picScale(PBitmap* src, PBitmap* dst);
-int mixColor(PBitmap* src, float fx, float fy, PColor* dst);
-PColor* getColor(PBitmap* pic, int x, int y, int* isInPic);
+int mixColor(PBitmap* src, float fx, float fy, RGB* dst);
+RGB* getColor(PBitmap* pic, int x, int y, int* isInPic);
 
 double myabs(double x);
 double mysin(double x);
@@ -29,7 +29,7 @@ int picTurn(PBitmap* src, PBitmap* dst, float angle);
 int getTurnSize(int* width, int* height, float angle);
 int picRollingOver(PBitmap* src, PBitmap* dst);
 int picTurnAround(PBitmap* src, PBitmap* dst);
-int setColor(PColor* src, PColor* dst);
+int setColor(RGB* src, RGB* dst);
 
 #define PI 3.1415926536
 

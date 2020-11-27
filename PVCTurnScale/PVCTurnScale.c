@@ -1,7 +1,7 @@
 #include "PVCTurnScale.h"
 
-// 排除边界，获取对应的PColor，对于错误的x，y，将isInPic置位0
-PColor * getColor(PBitmap* pic, int x, int y, int *isInPic)
+// 排除边界，获取对应的RGB，对于错误的x，y，将isInPic置位0
+RGB * getColor(PBitmap* pic, int x, int y, int *isInPic)
 {
     if(x<0||x>=pic->width||y<0||y>=pic->height)
     {
@@ -14,7 +14,7 @@ PColor * getColor(PBitmap* pic, int x, int y, int *isInPic)
     
 }
 
-int setColor(PColor* src, PColor* dst) 
+int setColor(RGB* src, RGB* dst) 
 {
     dst->r = src->r;
     dst->g = src->g;
@@ -23,8 +23,8 @@ int setColor(PColor* src, PColor* dst)
     return 1;
 }
 
-// 获取经过二次插值之后的PColor
-int mixColor(PBitmap* src, float fx, float fy, PColor* dst)
+// 获取经过二次插值之后的RGB
+int mixColor(PBitmap* src, float fx, float fy, RGB* dst)
 {
     int x = (int) fx;
     int y = (int) fy;
@@ -32,10 +32,10 @@ int mixColor(PBitmap* src, float fx, float fy, PColor* dst)
     if(y > fy) y--;
 
     int flag[4];
-    PColor *Color0 = getColor(src, x, y, &flag[0]);
-    PColor *Color1 = getColor(src, x + 1, y, &flag[1]);
-    PColor *Color2 = getColor(src, x, y + 1, &flag[2]);
-    PColor *Color3 = getColor(src, x + 1, y + 1, &flag[3]);
+    RGB *Color0 = getColor(src, x, y, &flag[0]);
+    RGB *Color1 = getColor(src, x + 1, y, &flag[1]);
+    RGB *Color2 = getColor(src, x, y + 1, &flag[2]);
+    RGB *Color3 = getColor(src, x + 1, y + 1, &flag[3]);
 
     float u = fx - x;
     float v = fy - y;
