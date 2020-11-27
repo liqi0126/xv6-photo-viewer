@@ -7,6 +7,8 @@ struct RGBA;
 struct Rect;
 struct Point;
 struct Size;
+struct Image;
+struct ImageList;
 
 #define USCREEN_WIDTH 800
 #define USCREEN_HEIGHT 600
@@ -37,6 +39,20 @@ typedef struct Window {
     struct RGB* content;
     struct RGB* wholeContent;
 } Window;
+
+typedef struct Image
+{
+	char* image_name;
+    int image_size;
+	struct Image* prev;
+	struct Image* next;
+}Image;
+
+typedef struct ImageList
+{
+	struct Image* head;
+	struct Image* tail;
+}ImageList;
 
 #endif
 #endif
