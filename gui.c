@@ -276,21 +276,3 @@ void drawScreenToScreen(RGB* buf, RGB* img) {
 void clearMouse(RGB *buf, RGB *temp_buf, int x, int y) {
     drawRGBContentToContentPart(buf, temp_buf, x, y, x, y, SCREEN_HEIGHT, SCREEN_WIDTH, MOUSE_HEIGHT, MOUSE_WIDTH);
 }
-
-void sys_hello() {
-    RGB *image;
-    int i;
-    int h, w;
-    argint(0, &i);
-    argint(1, &h);
-    argint(2, &w);
-    cprintf("size: %d * %d", h, w);
-    image = (RGB *)i;
-    RGBA color;
-    color.A = 200;
-    color.G = 255;
-    draw24Image(screen, image, 0, 0, w, h);
-    drawString(screen, 100, 200, "Hello World!", color);
-    drawMouse(screen, 0, 100, 100);
-    drawMouse(screen, 1, 100, 120);
-}

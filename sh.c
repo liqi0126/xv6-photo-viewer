@@ -163,7 +163,6 @@ main(void)
   int res = read24BitmapFile("desktop.bmp", image, &h, &w);
   printf(1, "res: %d\n", res);
 
-  hello(image, h, w);
 
   while(1) ;
 

@@ -30,7 +30,6 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-void hello(struct RGB *, int, int);
 
 typedef void (* ProcFun)(struct message *);
 // system calls for gui
