@@ -16,22 +16,8 @@ struct message;
 void            guiKernelHandleMsg(struct message *);
 void            initGUIKernel(void);
 
-// gui.c
-extern struct RGB* screen;
-extern struct RGB* screen_wo_focus;
-extern struct RGB* screen_buf;
-void            drawMouse(struct RGB *buf, int mode, int x, int y);
-void            clearMouse(struct RGB *buf, struct RGB *temp_buf, int x, int y);
+// gui_screen.c
 void            initGUI(void);
-int             drawCharacter(struct RGB*, int, int, char, struct RGBA);
-void            drawString(struct RGB*, int, int, char *, struct RGBA);
-void            draw24Image(struct RGB *, struct RGB *, int , int , int , int);
-void            drawRGBContentToContent(struct RGB *, struct RGB *, int , int , int , int);
-void drawRGBContentToContentPart(struct RGB *,struct RGB *, int, int,
-    int, int, int, int, int, int);
-void drawScreenToScreen(struct RGB*, struct RGB*);
-int             drawCharacterToContent(struct RGB*, int, int,int,int, char, struct RGBA);
-void            drawStringToContent(struct RGB*, int, int, int, int, char *, struct RGBA);
 
 // bio.c
 void            binit(void);

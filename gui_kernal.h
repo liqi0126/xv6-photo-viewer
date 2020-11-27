@@ -3,11 +3,18 @@
 #define MAX_MSG_COUNT 50
 #define MAX_WINDOW_COUNT 10
 
+#define MOUSE_SPEED_X 0.6f
+#define MOUSE_SPEED_Y -0.6f
+
 struct Rect;
 struct Point;
 struct Size;
 struct message;
 struct proc;
+
+enum mouseInWinPos {
+    NOT_IN, CONTENT, BAR, CLOSE_BTN
+};
 
 typedef struct MsgQueue {
     int head;
