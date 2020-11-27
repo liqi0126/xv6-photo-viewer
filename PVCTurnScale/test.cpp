@@ -1,7 +1,13 @@
+#define _CRT_SECURE_NO_WARNINGS
+extern "C" {
+	#include "PVCTurnScale.h"
+}
+
 #include<iostream>
 using namespace std;
-#include<string.h>
-#include "PVCTurnScale.h"
+
+
+
 
 typedef unsigned int DWORD;
 typedef unsigned short WORD;
@@ -30,22 +36,30 @@ typedef struct tagBITMAPINFOHEADER {
 	DWORD  biClrImportant; //本位图中重要的色彩数
 }BITMAPINFOHEADER; //位图信息头定义
 
-#define LENGTH_NAME_BMP 30
+typedef struct tagRGBQUAD {
+	BYTE rgbBlue;
+	BYTE rgbGreen;
+	BYTE rgbRed;
+	BYTE rgbReserved;
+}RGBQUAD;
+
+#define LENGTH_NAME_BMP 100
 BITMAPFILEHEADER strHead;
 BITMAPINFOHEADER strInfo;
+RGBQUAD strPla[256];
 
 PBitmap imagedata;
 
 void readBmp()
 {
 	char strFile[LENGTH_NAME_BMP];//bmp文件名
-	cout << "请输入所要读取的文件名:" << endl;
+	cout << "please write filename" << endl;
 	cin >> strFile;
 	FILE *fpi;
 	fpi = fopen(strFile, "rb");
 
 	while (fpi == NULL) {
-		cout << "打开文件失败! 请重新输入文件名。" << endl;
+		cout << "failed" << endl;
 		cin >> strFile;
 		fpi = fopen(strFile, "rb");
 	}
@@ -56,18 +70,20 @@ void readBmp()
 		fread(&bfType, 1, sizeof(WORD), fpi);
 		if (0x4d42 != bfType)
 		{
-			cout << "此文件不是一个BMP文件!" << endl;
+			cout << "It's not a bmp file!" << endl;
 			return;
 		}
 		//读取bmp文件的文件头和信息头
 		fread(&strHead, 1, sizeof(tagBITMAPFILEHEADER), fpi);
-		//showBmpHead(strHead);//显示文件头
+
 		fread(&strInfo, 1, sizeof(tagBITMAPINFOHEADER), fpi);
-		//showBmpInforHead(strInfo);//显示文件信息头
+
 
 		imagedata.width = strInfo.biWidth;
 		imagedata.height = strInfo.biHeight;
-		imagedata.data = (PColor*)malloc(imagedata.height * imagedata.width * sizeof(PColor));
+		imagedata.data = (struct PColor*)malloc(imagedata.height * imagedata.width * sizeof(struct PColor));
+
+
 
 		//初始化原始图片的像素数组
 		for (int i = 0; i < imagedata.height; ++i)
@@ -76,7 +92,7 @@ void readBmp()
 			{
 				(*(imagedata.data + i * imagedata.width + j)).b = 0;
 				(*(imagedata.data + i * imagedata.width + j)).g = 0;
-				(*(imagedata.data + i *  imagedata.width + j)).r = 0;
+				(*(imagedata.data + i * imagedata.width + j)).r = 0;
 			}
 		}
 
@@ -87,13 +103,13 @@ void readBmp()
 	}
 	else
 	{
-		cout << "打开文件失败！" << endl;
+		cout << "failed!" << endl;
 		return;
 	}
 
 }
 
-void PrintBMP()
+void PrintBMP(PBitmap *dstimage)
 {
 	FILE *fpw;
 	char strFile[LENGTH_NAME_BMP];
@@ -109,8 +125,13 @@ void PrintBMP()
 
 	WORD bfType_w = 0x4d42;
 	fwrite(&bfType_w, 1, sizeof(WORD), fpw);
+	fwrite(&strHead, 1, sizeof(tagBITMAPFILEHEADER), fpw);
+	strInfo.biWidth = dstimage->width;
+	strInfo.biHeight = dstimage->height;
+	fwrite(&strInfo, 1, sizeof(tagBITMAPINFOHEADER), fpw);
 
-    fwrite(imagedata.data, 1, sizeof(BYTE), fpw);
+
+    fwrite(dstimage->data, sizeof(struct PColor) * dstimage->width, dstimage->height, fpw);
 
 	fclose(fpw);
 }
@@ -120,11 +141,13 @@ void PrintBMP()
 int main(){
 	readBmp();
     PBitmap dstimage;
-	dstimage.data=(PColor*)malloc(imagedata.width*2*imagedata.height*2*sizeof(PColor));
-	dstimage.width=imagedata.width;
-	dstimage.height=imagedata.height;
-    PicScale(&imagedata,&dstimage);
-    PrintBMP();
-	return 1;
-
+	dstimage.width = (int) (imagedata.width );
+	dstimage.height = (int) (imagedata.height );
+	//getTurnSize(&dstimage.width, &dstimage.height, PI/2);
+	dstimage.data=(PColor*)malloc(dstimage.width * dstimage.height * sizeof(PColor));
+    //picScale(&imagedata,&dstimage);
+	//picTurn(&imagedata, &dstimage, PI*1.5);
+	picTurnAround(&imagedata, &dstimage);
+    PrintBMP(&dstimage);
+	return 0;
 }
