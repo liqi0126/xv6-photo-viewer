@@ -8,6 +8,7 @@
 #include "proc.h"
 
 #include "gui_base.h"
+#include "gui_screen.h"
 #include "gui_kernal.h"
 
 struct spinlock guiKernelLock;
