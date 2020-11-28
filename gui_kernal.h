@@ -58,16 +58,6 @@ typedef struct TimerInfo {
     int countList[MAX_WINDOW_COUNT];
 } TimerInfo;
 
-// gui_base.h
-void drawPoint(struct RGB* , struct RGB);
-void drawPointAlpha(struct RGB* , struct RGBA);
-void drawCharacter(struct RGB *, struct Point, struct Size, char, struct RGBA);
-void drawString(struct RGB *, struct Point, struct Size, char *, struct RGBA);
-void drawRect(struct RGB *, struct Point, struct Size, struct RGB, struct Size);
-void drawBitmap(struct RGB* , struct RGB* , struct Point, struct Point, struct Size, struct Size, struct Size);
-void drawTransparentBitmap(struct RGB*, struct RGB*, struct Point, struct Point, struct Size, struct Size, struct Size);
-void copyContent(struct RGB*, struct RGB*, struct Point, struct Size, struct Size);
-void drawMouse(struct RGB *, int, int, int);
 
 #endif
 #endif
