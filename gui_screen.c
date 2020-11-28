@@ -43,7 +43,9 @@ void initGUI() {
     cprintf("@Video card drivers initialized successfully.\n");
 }
 
+// seems like we don't need GUI lock
 void acquireGUILock(RGB *buf) {
+    return;
     if (buf == screen) {
         acquire(&screen_lock);
     } else if (buf == screen_wo_focus) {
@@ -54,6 +56,7 @@ void acquireGUILock(RGB *buf) {
 }
 
 void releaseGUILock(RGB *buf) {
+    return;
     if (buf == screen) {
         release(&screen_lock);
     } else if (buf == screen_wo_focus) {
