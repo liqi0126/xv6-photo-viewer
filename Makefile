@@ -31,7 +31,7 @@ OBJS = \
 	mouse.o\
 	mouse_shape.o\
 	gui_base.o\
-	gui_kernal.o\
+	gui_window.o\
 	gui_screen.o\
 
 # Cross-compiling (e.g., on Mac OS X)
