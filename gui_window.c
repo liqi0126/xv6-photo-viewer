@@ -40,8 +40,7 @@ int abs(int a) {
     return (a >= 0)? a: -a;
 }
 
-void setRect(struct Rect *rect, int x, int y, int w, int h)
-{
+void setRect(struct Rect *rect, int x, int y, int w, int h) {
     rect->x = x;
     rect->y = y;
     rect->w = w;
@@ -78,9 +77,7 @@ void initDesktop() {
     drawBitmapToScreen(screen_buf, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
 }
 
-// TODO:
-int drawWndTitleBar(int hwnd)
-{
+int drawWndTitleBar(int hwnd) {
     WndInfo *wnd = &wndInfoList[hwnd];
     if (hwnd==0)
         return 0;
@@ -99,8 +96,7 @@ int drawWndTitleBar(int hwnd)
     return 0;
 }
 
-int repaintAllWindow(int hwnd)
-{
+int repaintAllWindow(int hwnd) {
     int i;
     for (i = 0; i < wndCount; ++i) {
         switchuvm(wndInfoList[focusList[i]].procPtr);
@@ -121,8 +117,7 @@ int repaintAllWindow(int hwnd)
     return 0;
 }
 
-int focusOnWindow(int hwnd)
-{
+int focusOnWindow(int hwnd) {
     focus = hwnd;
     if (wndCount >= 1 && hwnd == focusList[0]) {
         repaintAllWindow(hwnd);
@@ -148,8 +143,7 @@ int focusOnWindow(int hwnd)
     return 0;
 }
 
-int updateWindow(int hwnd, int x, int y, int w, int h)
-{
+int updateWindow(int hwnd, int x, int y, int w, int h) {
     WndInfo * wnd = &wndInfoList[hwnd];
     int bx = x;
     int by = y;
@@ -186,32 +180,28 @@ void initGUIKernel() {
 /*********************************************************
  * Handle Message 
 **********************************************************/
-void  initMsgQueue(MsgQueue * msgQ)
-{
+void  initMsgQueue(MsgQueue * msgQ) {
     msgQ->head = 0;
     msgQ->tail = 0;
     msgQ->length = 0;
     memset(msgQ->msgList, 0, MAX_MSG_COUNT * sizeof(message));
 }
 
-int isQueueEmpty(MsgQueue *msgQ)
-{
+int isQueueEmpty(MsgQueue *msgQ) {
     if(msgQ->head==msgQ->tail)
         return 1;
     else
         return 0;
 }
 
-int isQueueFull(MsgQueue *msgQ)
-{
+int isQueueFull(MsgQueue *msgQ) {
     if(msgQ->head==(msgQ->tail + 1) % MAX_MSG_COUNT)
         return 1;
     else
         return 0;
 }
 
-int addMsgToQueue(MsgQueue *msgQ, message *msg)
-{
+int addMsgToQueue(MsgQueue *msgQ, message *msg) {
     if(msg->msg_type == M_CLOSE_WINDOW)
     {
          msgQ->msgList[msgQ->tail].msg_type = M_CLOSE_WINDOW;
@@ -225,15 +215,13 @@ int addMsgToQueue(MsgQueue *msgQ, message *msg)
     return 1;
 }
 
-int dispatchMessage(int hwnd, message *msg)
-{
+int dispatchMessage(int hwnd, message *msg) {
     if(addMsgToQueue(&wndInfoList[hwnd].msgQ, msg))
         return 1;
     return 0;
 }
 
-int getMessageFromQueue(MsgQueue *msgQ, message * msg)
-{
+int getMessageFromQueue(MsgQueue *msgQ, message * msg) {
     if(isQueueEmpty(msgQ))
         return 0;
     msg->msg_type = msgQ->msgList[msgQ->head].msg_type;
@@ -243,8 +231,7 @@ int getMessageFromQueue(MsgQueue *msgQ, message * msg)
     return 1;
 }
 
-void guiKernelHandleMsg(message *msg)
-{
+void guiKernelHandleMsg(message *msg) {
     acquire(&guiKernelLock);
     message tempMsg;
     int i;
