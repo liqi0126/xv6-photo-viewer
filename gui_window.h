@@ -75,8 +75,5 @@ typedef struct TimerInfo {
 // int dispatchMessage(int hwnd, message *msg);
 // int getMessageFromQueue(MsgQueue *msgQ, message * msg);
 
-
-
-
 #endif
 #endif

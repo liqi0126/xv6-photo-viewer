@@ -180,7 +180,7 @@ void initGUIKernel() {
 /*********************************************************
  * Handle Message 
 **********************************************************/
-void  initMsgQueue(MsgQueue * msgQ) {
+void initMsgQueue(MsgQueue * msgQ) {
     msgQ->head = 0;
     msgQ->tail = 0;
     msgQ->length = 0;
