@@ -18,8 +18,6 @@ struct Size;
 void            guiKernelHandleMsg(struct message *);
 void            initGUIKernel(void);
 
-
-
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);

@@ -30,9 +30,10 @@ OBJS = \
 	msg.o\
 	mouse.o\
 	mouse_shape.o\
+	character.o\
 	gui_base.o\
-	gui_window.o\
 	gui_screen.o\
+	gui_window.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
@@ -140,7 +141,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o bitmap.o xv6_api.o
+ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
