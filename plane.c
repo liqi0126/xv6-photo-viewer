@@ -3,6 +3,7 @@
 #include "fcntl.h"
 #include "msg.h"
 #include "gui_base.h"
+#include "gui_api.h"
 
 Window wnd;
 #define PLANE_HEIGHT 47

@@ -5,6 +5,7 @@
 #include "fcntl.h"
 #include "msg.h"
 #include "gui_base.h"
+#include "gui_api.h"
 
 Window wnd;
 #define  AppCount 5
