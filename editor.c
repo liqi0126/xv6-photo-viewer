@@ -3,6 +3,8 @@
 #include "fcntl.h"
 #include "msg.h"
 #include "gui_base.h"
+#include "gui_api.h"
+
 #include "kbd.h"
 Window wnd;
 int pos_x = 0;

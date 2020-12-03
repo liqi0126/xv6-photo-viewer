@@ -10,6 +10,8 @@
 
 //define the xv6 param
 #include "gui_base.h"
+#include "gui_api.h"
+
 
 Window wnd;
 

@@ -1,3 +1,7 @@
+
+#ifndef GUI_KERNEL_H
+#define GUI_KERNEL_H
+
 #ifndef __ASSEMBLER__
 
 #define MAX_MSG_COUNT 50
@@ -11,6 +15,9 @@ struct Point;
 struct Size;
 struct message;
 struct proc;
+struct WndInfo;
+struct TimerInfo; 
+struct spinlock;
 
 enum mouseInWinPos {
     NOT_IN, CONTENT, BAR, CLOSE_BTN
@@ -53,4 +60,20 @@ typedef struct TimerInfo {
     int intervalList[MAX_WINDOW_COUNT];
     int countList[MAX_WINDOW_COUNT];
 } TimerInfo;
+
+// void setRect(struct Rect *rect, int x, int y, int w, int h);
+
+// int drawWndTitleBar(int hwnd);
+// int repaintAllWindow(int hwnd);
+// int focusOnWindow(int hwnd);
+// int updateWindow(int hwnd, int x, int y, int w, int h);
+
+// void  initMsgQueue(MsgQueue * msgQ);
+// int isQueueEmpty(MsgQueue *msgQ);
+// int isQueueFull(MsgQueue *msgQ);
+// int addMsgToQueue(MsgQueue *msgQ, message *msg);
+// int dispatchMessage(int hwnd, message *msg);
+// int getMessageFromQueue(MsgQueue *msgQ, message * msg);
+
+#endif
 #endif

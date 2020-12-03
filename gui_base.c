@@ -1,7 +1,9 @@
 #include "types.h"
+#include "defs.h"
 #include "gui_base.h"
 #include "mouse_shape.h"
 #include "character.h"
+
 
 void drawPoint(RGB* color, RGB origin) {
     color->R = origin.R;
@@ -26,12 +28,12 @@ void drawPointAlpha(RGB* color, RGBA origin) {
     color->B = color->B * (1 - alpha) + origin.B * alpha;
 }
 
-void drawCharacter(RGB *buf, Size s, Point p, char ch, RGBA color) {
+void drawCharacter(RGB *buf, Point p, Size s, char ch, RGBA color) {
     int i, j;
     RGB *t;
     int ord = ch - 0x20; // omit control ASCII code.
     if (ord < 0 || ord >= (CHARACTER_NUMBER - 1)) {
-        return -1;
+        return;
     }
 
     for (i = 0; i < CHARACTER_HEIGHT; i++) {
@@ -50,11 +52,11 @@ void drawCharacter(RGB *buf, Size s, Point p, char ch, RGBA color) {
     }
 }
 
-void drawString(RGB *buf, Size s, Point p, char *str, RGBA color) {
+void drawString(RGB *buf, Point p, Size s, char *str, RGBA color) {
     int offset_x = 0;
 
     while (*str != '\0') {
-        drawCharacter(buf, s, (Point){p.x+offset_x, p.y}, *str, color);
+        drawCharacter(buf, (Point){p.x+offset_x, p.y}, s, *str, color);
         offset_x += CHARACTER_WIDTH;
         str++;
     }
@@ -108,6 +110,9 @@ void drawBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc, Size st, 
     }
 
     for (int i = 0; i < draw_h; i++) {
+        if (pt.y + i < 0 || pt.y + i >= st.h) {
+            continue;
+        }
         t = tgt + (pt.y + i) * st.w + pt.x;
         o = cont + (pc.y + i) * sc.w + pc.x;
         memmove(t, o, draw_w * 3);
@@ -150,7 +155,7 @@ void drawTransparentBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc
 }
 
 void copyContent(RGB* tgt, RGB* src, Point p, Size s, Size copy_size) {
-    drawContent(tgt, src, p, p, s, s, copy_size);
+    drawBitmap(tgt, src, p, p, s, s, copy_size);
 }
 
 void drawMouse(RGB *buf, int mode, int x, int y) {

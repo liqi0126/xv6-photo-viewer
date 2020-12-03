@@ -5,6 +5,7 @@
 #include "fcntl.h"
 #include "msg.h"
 #include "gui_base.h"
+#include "gui_api.h"
 
 Window wnd;
 #define  AppCount 5
@@ -94,14 +95,10 @@ void desktopInit()
         api_paint24BitmapToContent(&wnd, IconBuffer, appPos[i], (Point){0, 0},(Size){80,80}, (Size){80,80});
        // api_paint24Bitmap(&wnd, IconBuffer, appPos[i],(Size){55,40});
     }
-    int h, w;
-    read24BitmapFile(save_filename, save_icon, &h, &w);
-    api_paint24BitmapToContent(&wnd, save_icon, (Point){140,0}, (Point){0,0}, (Size){148,341},(Size){148,341});
 }
 
 int
-main(void)
-{
+main(void) {
     wnd.pos.x = 0;
     wnd.pos.y = 0;
     wnd.size.w = USCREEN_WIDTH;
@@ -115,7 +112,7 @@ main(void)
     int h, w;
     read24BitmapFile(filename, background, &h, &w);
 
-    api_paint24Bitmap(&wnd, background,(Point){0,0}, (Size){600, 800});
+    api_paint24Bitmap(&wnd, background,(Point){0,0}, (Size){h, w});
     desktopInit();
     api_repaint(&wnd);
     printf(1, "safe here\n");

@@ -9,9 +9,9 @@ ushort SCREEN_WIDTH;
 ushort SCREEN_HEIGHT;
 int screen_size; 
 
-#define USCREEN_WIDTH 800
-#define USCREEN_HEIGHT 600
 #define UTITLE_HEIGHT 30
+#define USCREEN_HEIGHT 600
+#define USCREEN_WIDTH 800
 
 // 24 bit RGB. used in GUI Utility
 typedef struct RGB {
@@ -54,15 +54,16 @@ typedef struct Window {
     struct RGB* wholeContent;
 } Window;
 
-void drawPoint(RGB* color, RGB origin);
-void drawPointAlpha(RGB* color, RGBA origin);
-void drawCharacter(RGB *buf, Size s, Point p, char ch, RGBA color);
-void drawString(RGB *buf, Size s, Point p, char *str, RGBA color);
-void drawRect(RGB *buf, Point p, Size s, RGB color, Size rect_size);
-void drawBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc, Size st, Size sc, Size s);
-void drawTransparentBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc, Size st, Size sc, Size s);
-void copyContent(RGB* tgt, RGB* src, Point p, Size s, Size copy_size);
-void drawMouse(RGB *buf, int mode, int x, int y);
+// gui_base.h
+void drawPoint(struct RGB* , struct RGB);
+void drawPointAlpha(struct RGB* , struct RGBA);
+void drawCharacter(struct RGB *, struct Point, struct Size, char, struct RGBA);
+void drawString(struct RGB *, struct Point, struct Size, char *, struct RGBA);
+void drawRect(struct RGB *, struct Point, struct Size, struct RGB, struct Size);
+void drawBitmap(struct RGB* , struct RGB* , struct Point, struct Point, struct Size, struct Size, struct Size);
+void drawTransparentBitmap(struct RGB*, struct RGB*, struct Point, struct Point, struct Size, struct Size, struct Size);
+void copyContent(struct RGB*, struct RGB*, struct Point, struct Size, struct Size);
+void drawMouse(struct RGB *, int, int, int);
 
 #endif
 #endif

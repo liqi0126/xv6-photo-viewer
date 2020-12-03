@@ -11,13 +11,12 @@ struct superblock;
 struct RGB;
 struct RGBA;
 struct message;
+struct Point;
+struct Size;
 
 // gui_kernal.c
 void            guiKernelHandleMsg(struct message *);
 void            initGUIKernel(void);
-
-// gui_screen.c
-void            initGUI(void);
 
 // bio.c
 void            binit(void);

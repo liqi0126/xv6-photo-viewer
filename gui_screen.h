@@ -1,17 +1,20 @@
-struct RGB;
-struct RGBA;
-struct Size;
-struct Point;
+#ifndef GUI_SCREEN_H
+#define GUI_SCREEN_H
+
+#ifndef __ASSEMBLER__
 
 extern struct RGB* screen;
 extern struct RGB* screen_wo_focus;
 extern struct RGB* screen_buf;
+void initGUI(void);
+void drawCharacterToScreen(struct RGB *, struct Point, struct Size, char, struct RGBA);
+void drawStringToScreen(struct RGB *, struct Point, struct Size, char *, struct RGBA);
+void drawBitmapToScreen(struct RGB *, struct RGB *, struct Point, struct Size);
+void drawPartBitmapToScreen(struct RGB *, struct RGB *, struct Point, struct Point, struct Size, struct Size);
+void drawTransparentBitmapToScreen(struct RGB *, struct RGB *, struct Point, struct Size);
+void drawMouseToScreen(struct RGB *, int, int, int);
+void drawScreenToScreen(struct RGB*, struct RGB*);
+void clearMouse(struct RGB *, struct RGB *, int, int);
 
-void drawCharacterToScreen(RGB *buf, Size s, Point p, char ch, RGBA color);
-void drawStringToScreen(RGB *buf, Size s, Point p, char *str, RGBA color);
-void drawBitmapToScreen(RGB *buf, RGB *img, Point p, Size s);
-void drawPartBitmapToScreen(RGB *buf, RGB *img, Point screen_p, Point img_p, Size img_s, Size draw_s);
-void drawTransparentBitmapToScreen(RGB *buf, RGB *img, Point p, Size s);
-void drawMouseToScreen(RGB *buf, int mode, int x, int y);
-void drawScreenToScreen(RGB* buf, RGB* img);
-void clearMouse(RGB *buf, RGB *no_mouse_buf, int x, int y);
+#endif
+#endif
