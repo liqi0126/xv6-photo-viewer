@@ -31,7 +31,6 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-void hello(struct RGB *, int, int);
 
 typedef void (* ProcFun)(struct message *);
 // system calls for gui
@@ -56,42 +55,3 @@ void* malloc(uint);
 void free(void*);
 int atoi(const char*);
 
-// bitmap.c
-int readBitmapFile(char *, struct RGBA *, int *, int *);
-int read24BitmapFile(char *, struct RGB *, int *, int *);
-int write24BitmapFile(char *, struct RGB *, int, int);
-
-// xv6_api.c
-int api_createwindow(struct Window *);
-int api_paint24Bitmap(struct Window *, struct RGB*, struct Point, struct Size);
-int api_paint24BitmapToContent(struct Window*, struct RGB*,struct Point,struct Point,struct Size, struct Size);
-int api_paint24BitmapToContentTransparent(struct Window*, struct RGB*,struct Point,struct Point,struct Size, struct Size);
-int api_paintContentToContent(struct Window*, struct RGB*,struct Point,struct Point,struct Size, struct Size);
-int api_repaint(struct Window *);
-int api_update(struct Window *, struct Rect);
-int api_settimer(struct Window *, int);
-int api_exec(struct Window *, ProcFun);
-int api_fastrand();
-int api_drawPointAlpha(struct RGB*, struct RGBA);
-int api_drawCharacter(struct Window *, int, int, char, struct RGBA);
-int api_drawString(struct Window *, int, int, char *, struct RGBA);
-int api_destroywindow(struct Window *wnd);
-int api_drawRect(struct Window *, struct Point, struct Size, struct RGB);
-int api_drawButton(struct Window *, struct Point, struct Size, char *);
-
-// image_utils.c
-int picScale(struct PBitmap * src, struct PBitmap * dst);
-int mixColor(struct PBitmap * src, float fx, float fy, struct RGB * dst);
-struct RGB * getColor(struct PBitmap * pic, int x, int y, int* isInPic);
-int picTurn(struct PBitmap * src, struct PBitmap * dst, float angle);
-int getTurnSize(int* width, int* height, float angle);
-int picRollingOver(struct PBitmap * src, struct PBitmap * dst);
-int picTurnAround(struct PBitmap * src, struct PBitmap * dst);
-int setColor(struct RGB * src, struct RGB * dst);
-
-// math.c
-float abs(float x);
-float sin(float x);
-float cos(float x);
-float pow(float a, int b);
-float sqrt(float number);

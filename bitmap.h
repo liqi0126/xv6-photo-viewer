@@ -22,4 +22,9 @@ typedef struct BITMAP_INFO_HEADER {
     uint biCirImportant;
 } __attribute__((packed)) BITMAP_INFO_HEADER;
 
+// bitmap.c
+int readBitmapFile(char *, struct RGBA *, int *, int *);
+int read24BitmapFile(char *, struct RGB *, int *, int *);
+int write24BitmapFile(char *, struct RGB *, int, int);
+
 #endif

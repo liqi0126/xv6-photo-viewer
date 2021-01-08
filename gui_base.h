@@ -7,7 +7,11 @@
 
 ushort SCREEN_WIDTH;
 ushort SCREEN_HEIGHT;
-int screen_size;
+int screen_size; 
+
+#define UTITLE_HEIGHT 30
+#define USCREEN_HEIGHT 600
+#define USCREEN_WIDTH 800
 
 // 24 bit RGB. used in GUI Utility
 typedef struct RGB {
@@ -23,6 +27,43 @@ typedef struct RGBA {
     unsigned char G;
     unsigned char R;
 } RGBA;
+
+typedef struct Rect {
+    int x;
+    int y;
+    int h;
+    int w;
+} Rect;
+
+typedef struct Point {
+    int x;
+    int y;
+} Point;
+
+typedef struct Size {
+    int h;
+    int w;
+} Size;
+
+typedef struct Window {
+    int hwnd;
+    Point pos;
+    Size size;
+    char* title;
+    struct RGB* content;
+    struct RGB* wholeContent;
+} Window;
+
+// gui_base.h
+void drawPoint(struct RGB* , struct RGB);
+void drawPointAlpha(struct RGB* , struct RGBA);
+void drawCharacter(struct RGB *, struct Point, struct Size, char, struct RGBA);
+void drawString(struct RGB *, struct Point, struct Size, char *, struct RGBA);
+void drawRect(struct RGB *, struct Point, struct Size, struct RGB, struct Size);
+void drawBitmap(struct RGB* , struct RGB* , struct Point, struct Point, struct Size, struct Size, struct Size);
+void drawTransparentBitmap(struct RGB*, struct RGB*, struct Point, struct Point, struct Size, struct Size, struct Size);
+void copyContent(struct RGB*, struct RGB*, struct Point, struct Size, struct Size);
+void drawMouse(struct RGB *, int, int, int);
 
 #endif
 #endif

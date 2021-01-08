@@ -3,13 +3,18 @@
 #include "msg.h"
 #include "user.h"
 #include "types.h"
-#include "color.h"
+#include "user.h"
 #include "fcntl.h"
 #include "fs.h"
 #include "stat.h"
 #include "xv6_api.h"
 
 #define PI 3.1415926536
+
+//define the xv6 param
+#include "gui_base.h"
+#include "gui_api.h"
+
 
 Window wnd;
 

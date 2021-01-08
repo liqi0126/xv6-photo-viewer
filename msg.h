@@ -22,6 +22,7 @@
 
 #define M_TIMER 9
 #define M_CLOSE_WINDOW 10
+
 typedef struct message {
     int msg_type;
     int params[10];

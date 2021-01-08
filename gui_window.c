@@ -3,24 +3,31 @@
 #include "param.h"
 #include "defs.h"
 #include "msg.h"
-#include "xv6_api.h"
 #include "spinlock.h"
-#include "gui_base.h"
-#include "gui_kernal.h"
 #include "mmu.h"
 #include "proc.h"
-//struct wndInfo wndInfoList[MAX_WINDOW_COUNT];
+
+#include "gui_base.h"
+#include "gui_screen.h"
+#include "gui_window.h"
+
+struct spinlock guiKernelLock;
+
+struct WndInfo wndInfoList[MAX_WINDOW_COUNT];
+int focusList[MAX_WINDOW_COUNT];
+int wndCount = 0;
+
 int  focus =  -1;
 struct MousePos mousePos = {0, 0};
 struct MousePos lastMousePos = {0, 0};
-struct WndInfo wndInfoList[MAX_WINDOW_COUNT];
-struct TimerInfo timerInfo;
-int focusList[MAX_WINDOW_COUNT];
-int wndCount = 0;
-struct spinlock guiKernelLock;
 int mouseDownInContent = 0;
 int mouseDownInBar = 0;
 
+struct TimerInfo timerInfo;
+
+/*********************************************************
+ * Help Functions
+**********************************************************/
 int min(int a, int b) {
     return (a > b) ? b : a;
 }
@@ -33,145 +40,71 @@ int abs(int a) {
     return (a >= 0)? a: -a;
 }
 
-int testXXX(RGB * p)
-{
-    cprintf("%d %d %d", p->R, p->G, p->B);
-    cprintf("Test XXX\n");
-    return 0;
+void setRect(struct Rect *rect, int x, int y, int w, int h) {
+    rect->x = x;
+    rect->y = y;
+    rect->w = w;
+    rect->h = h;
 }
 
-// return 0 not in return 1 in content return 2 in bar
 int mouseInWin(int px, int py, int hwnd)
 {
     Rect * body = &wndInfoList[hwnd].wndBody;
     Rect * bar = &wndInfoList[hwnd].wndTitleBar;
 
     if(px <= body->x || px >= (body->x + body->w))
-        return 0;
+        return NOT_IN;
 
     if(py > body->y && py <(body->y + body->h))
-        return 1;
+        return CONTENT;
     if(py > bar->y && py < (bar->y + bar->h))
     {
-        if(px > body->x && px < body->x + body->w - 30)
-            return 2;
+        if(px > body->x && px < body->x + body->w - UTITLE_HEIGHT)
+            return BAR;
         else
-            return 3;
+            return CLOSE_BTN;
     }
 
     return 0;
 }
-void  initMsgQueue(MsgQueue * msgQ)
-{
-    msgQ->head = 0;
-    msgQ->tail = 0;
-    msgQ->length = 0;
-    memset(msgQ->msgList, 0, MAX_MSG_COUNT * sizeof(message));
+
+/*********************************************************
+ * Paint Functions
+**********************************************************/
+void initDesktop() {
+    drawBitmapToScreen(screen, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
+    drawBitmapToScreen(screen_wo_focus, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
+    drawBitmapToScreen(screen_buf, wndInfoList[0].content, (Point){0, 0}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH});
 }
 
-int isQueueEmpty(MsgQueue *msgQ)
-{
-    if(msgQ->head==msgQ->tail)
-        return 1;
-    else
-        return 0;
-}
-
-int isQueueFull(MsgQueue *msgQ)
-{
-    if(msgQ->head==(msgQ->tail + 1) % MAX_MSG_COUNT)
-        return 1;
-    else
-        return 0;
-}
-
-int addMsgToQueue(MsgQueue *msgQ, message *msg)
-{
-    if(msg->msg_type == M_CLOSE_WINDOW)
-    {
-         msgQ->msgList[msgQ->tail].msg_type = M_CLOSE_WINDOW;
-    }
-    if(isQueueFull(msgQ))
-        return 0;
-    msgQ->msgList[msgQ->tail].msg_type = msg->msg_type;
-    memmove(msgQ->msgList[msgQ->tail].params, msg->params, 10 * sizeof(int));
-    msgQ->tail = (msgQ->tail + 1) % MAX_MSG_COUNT;
-    msgQ->length++;
-    return 1;
-}
-
-int getMessageFromQueue(MsgQueue *msgQ, message * msg)
-{
-    if(isQueueEmpty(msgQ))
-        return 0;
-    msg->msg_type = msgQ->msgList[msgQ->head].msg_type;
-    memmove(msg->params, msgQ->msgList[msgQ->head].params, 10 * sizeof(int));
-    msgQ->head=(msgQ->head + 1) % MAX_MSG_COUNT;
-    msgQ->length--;
-    return 1;
-}
-
-void
-initGUIKernel()
-{
-    cprintf("guiKernelInit\n");
-    int i;
-    for(i = 0; i < MAX_WINDOW_COUNT; ++i)
-        wndInfoList[i].hwnd = -1;
-
-    timerInfo.ticks = -1;
-    for(i = 0; i < MAX_WINDOW_COUNT; ++i)
-    {
-        timerInfo.intervalList[i] = -1;
-        timerInfo.countList[i] = -1;
-    }
-
-}
-
-#define MOUSE_SPEED_X 0.6f
-#define MOUSE_SPEED_Y -0.6f
-
-int dispatchMessage(int hwnd, message *msg)
-{
-    if(addMsgToQueue(&wndInfoList[hwnd].msgQ, msg))
-        return 1;
-    return 0;
-}
-
-int drawWndTitleBar(int hwnd)
-{
+int drawWndTitleBar(int hwnd) {
     WndInfo *wnd = &wndInfoList[hwnd];
     if (hwnd==0)
         return 0;
-    int i = 0;
-    /*int x = wnd->wndTitleBar.x;*/
-    /*int y = wnd->wndTitleBar.y;*/
     int w = wnd->wndTitleBar.w;
     int h = wnd->wndTitleBar.h;
     RGB * o;
     RGB * buf = wnd->wholeContent;
-    for(i = 0; i < h; ++i)
+    for(int i = 0; i < h; ++i)
     {
         o = buf +  i * w;
         memset(o, 118, (w - h) * 3);
         o = buf +  i * w + w - h ;
         memset(o, 0,  h * 3);
     }
-    drawStringToContent(buf, 10, 5, w,h,wnd->title, (RGBA){255, 255,255,255});
+    drawStringToScreen(buf, (Point){10, 5}, (Size){h, w}, wnd->title, (RGBA){255, 255, 255, 255});
     return 0;
 }
 
-int repaintAllWindow(int hwnd)
-{
+int repaintAllWindow(int hwnd) {
     int i;
     for (i = 0; i < wndCount; ++i) {
         switchuvm(wndInfoList[focusList[i]].procPtr);
-       // drawWndTitleBar(screen_buf2, i);
-        drawRGBContentToContent(screen_buf2, wndInfoList[focusList[i]].wholeContent, wndInfoList[focusList[i]].wndBody.x,
-                wndInfoList[focusList[i]].wndTitleBar.y, wndInfoList[focusList[i]].wndBody.w, wndInfoList[focusList[i]].wndBody.h + 30);
+        drawBitmapToScreen(screen_buf, wndInfoList[focusList[i]].wholeContent, 
+        (Point){wndInfoList[focusList[i]].wndTitleBar.x, wndInfoList[focusList[i]].wndTitleBar.y},
+        (Size){wndInfoList[focusList[i]].wndBody.h + wndInfoList[focusList[i]].wndTitleBar.h, wndInfoList[focusList[i]].wndBody.w});
         if (i == wndCount - 2) {
-            // drawWndTitleBar(screen_buf1, i);
-            drawScreenToScreen(screen_buf1, screen_buf2);
+            drawScreenToScreen(screen_wo_focus, screen_buf);
         }
         if (proc == 0) {
             switchkvm();
@@ -179,13 +112,12 @@ int repaintAllWindow(int hwnd)
             switchuvm(proc);
         }
     }
-    drawScreenToScreen(screen, screen_buf2);
-    drawMouse(screen, 0, mousePos.x, mousePos.y);
+    drawScreenToScreen(screen, screen_buf);
+    drawMouseToScreen(screen, 0, mousePos.x, mousePos.y);
     return 0;
 }
 
-int focusOnWindow(int hwnd)
-{
+int focusOnWindow(int hwnd) {
     focus = hwnd;
     if (wndCount >= 1 && hwnd == focusList[0]) {
         repaintAllWindow(hwnd);
@@ -211,9 +143,95 @@ int focusOnWindow(int hwnd)
     return 0;
 }
 
-void
-guiKernelHandleMsg(message *msg)
-{
+int updateWindow(int hwnd, int x, int y, int w, int h) {
+    WndInfo * wnd = &wndInfoList[hwnd];
+    int bx = x;
+    int by = y;
+    int bh = wnd->wndBody.h;
+    int bw = wnd->wndBody.w;
+
+    x = x + wnd->wndBody.x;
+    y = y + wnd->wndBody.y;
+    /*void drawRGBContentToContentPart(RGB *buf, RGB *img, int x, int y,*/
+    /*int bx, int by, int bh, int bw, int h, int w)*/
+
+    drawPartBitmapToScreen(screen_buf, wnd->content, (Point){x, y}, (Point){bx, by}, (Size){bh, bw}, (Size){h, w});
+    drawPartBitmapToScreen(screen, wnd->content, (Point){x, y}, (Point){bx, by}, (Size){bh, bw}, (Size){h, w});
+    return 0;
+}
+
+
+/*********************************************************
+ * Initialization
+**********************************************************/
+
+void initGUIKernel() {
+    for(int i = 0; i < MAX_WINDOW_COUNT; ++i)
+        wndInfoList[i].hwnd = -1;
+
+    timerInfo.ticks = -1;
+    for(int i = 0; i < MAX_WINDOW_COUNT; ++i)
+    {
+        timerInfo.intervalList[i] = -1;
+        timerInfo.countList[i] = -1;
+    }
+}
+
+/*********************************************************
+ * Handle Message 
+**********************************************************/
+void initMsgQueue(MsgQueue * msgQ) {
+    msgQ->head = 0;
+    msgQ->tail = 0;
+    msgQ->length = 0;
+    memset(msgQ->msgList, 0, MAX_MSG_COUNT * sizeof(message));
+}
+
+int isQueueEmpty(MsgQueue *msgQ) {
+    if(msgQ->head==msgQ->tail)
+        return 1;
+    else
+        return 0;
+}
+
+int isQueueFull(MsgQueue *msgQ) {
+    if(msgQ->head==(msgQ->tail + 1) % MAX_MSG_COUNT)
+        return 1;
+    else
+        return 0;
+}
+
+int addMsgToQueue(MsgQueue *msgQ, message *msg) {
+    if(msg->msg_type == M_CLOSE_WINDOW)
+    {
+         msgQ->msgList[msgQ->tail].msg_type = M_CLOSE_WINDOW;
+    }
+    if(isQueueFull(msgQ))
+        return 0;
+    msgQ->msgList[msgQ->tail].msg_type = msg->msg_type;
+    memmove(msgQ->msgList[msgQ->tail].params, msg->params, 10 * sizeof(int));
+    msgQ->tail = (msgQ->tail + 1) % MAX_MSG_COUNT;
+    msgQ->length++;
+    return 1;
+}
+
+int dispatchMessage(int hwnd, message *msg) {
+    if(addMsgToQueue(&wndInfoList[hwnd].msgQ, msg))
+        return 1;
+    return 0;
+}
+
+int getMessageFromQueue(MsgQueue *msgQ, message * msg) {
+    if(isQueueEmpty(msgQ))
+        return 0;
+    msg->msg_type = msgQ->msgList[msgQ->head].msg_type;
+    memmove(msg->params, msgQ->msgList[msgQ->head].params, 10 * sizeof(int));
+    msgQ->head=(msgQ->head + 1) % MAX_MSG_COUNT;
+    msgQ->length--;
+    return 1;
+}
+
+void guiKernelHandleMsg(message *msg) {
     acquire(&guiKernelLock);
     message tempMsg;
     int i;
@@ -242,16 +260,15 @@ guiKernelHandleMsg(message *msg)
             WndInfo* wnd = &wndInfoList[focus];
             int nx = wndInfoList[focus].wndTitleBar.x + dx;
             int ny = wndInfoList[focus].wndTitleBar.y + dy;
-            drawRGBContentToContentPart(screen_buf2, screen_buf1, wnd->wndTitleBar.x, wnd->wndTitleBar.y,
-                                        wnd->wndTitleBar.x, wnd->wndTitleBar.y, SCREEN_HEIGHT, SCREEN_WIDTH,
-                                        wnd->wndBody.h + 30, wnd->wndBody.w);
+            drawPartBitmapToScreen(screen_buf, screen_wo_focus, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y},
+            (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
             switchuvm(wndInfoList[focus].procPtr);
-            drawRGBContentToContent(screen_buf2, wnd->wholeContent, nx, ny, wnd->wndBody.w, wnd->wndBody.h + 30);
+            drawBitmapToScreen(screen_buf, wnd->wholeContent, (Point){nx, ny}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
             int bx = min(wnd->wndTitleBar.x, nx);
             int bw = wnd->wndBody.w + abs(dx);
             int by = min(wnd->wndTitleBar.y, ny);
-            int bh = wnd->wndBody.h + abs(dy) + 30;
-            drawRGBContentToContentPart(screen, screen_buf2, bx, by, bx, by, SCREEN_HEIGHT, SCREEN_WIDTH, bh, bw);
+            int bh = wnd->wndBody.h + abs(dy) + UTITLE_HEIGHT;
+            drawPartBitmapToScreen(screen, screen_buf, (Point){bx, by}, (Point){bx, by}, (Size){SCREEN_HEIGHT, SCREEN_WIDTH}, (Size){bh, bw});
             wnd->wndTitleBar.x += dx;
             wnd->wndTitleBar.y += dy;
             wnd->wndBody.x += dx;
@@ -268,20 +285,20 @@ guiKernelHandleMsg(message *msg)
             tempMsg.params[1] = mousePos.y - wndInfoList[focus].wndBody.y;
             dispatchMessage(focus, &tempMsg);
         }
-        clearMouse(screen, screen_buf2,lastMousePos.x, lastMousePos.y);
-        drawMouse(screen, 0, mousePos.x, mousePos.y);
+        clearMouse(screen, screen_buf,lastMousePos.x, lastMousePos.y);
+        drawMouseToScreen(screen, 0, mousePos.x, mousePos.y);
         break;
     case M_MOUSE_DOWN:
-        tempR = 0;
+        tempR = NOT_IN;
         for (i = wndCount - 1; i >= 0; i--) {
             tempR = mouseInWin(mousePos.x, mousePos.y, focusList[i]);
-            if(tempR != 0)
+            if(tempR != NOT_IN)
                 break;
         }
-        if(tempR == 1) {
+        if(tempR == CONTENT) {
             mouseDownInContent = 1;
         }
-        if(tempR == 2) {
+        if(tempR == BAR) {
             mouseDownInBar = 1;
         }
         if (focus != focusList[i]) {
@@ -291,7 +308,7 @@ guiKernelHandleMsg(message *msg)
         tempMsg.params[0] = mousePos.x - wndInfoList[focus].wndBody.x;
         tempMsg.params[1] = mousePos.y - wndInfoList[focus].wndBody.y;
         dispatchMessage(focus, &tempMsg);
-        if (tempR == 3) {
+        if (tempR == CLOSE_BTN) {
             tempMsg.msg_type = M_CLOSE_WINDOW;
             dispatchMessage(focus, &tempMsg);
         }
@@ -364,21 +381,9 @@ guiKernelHandleMsg(message *msg)
     release(&guiKernelLock);
 }
 
-
-void setRect(struct Rect *rect, int x, int y, int w, int h)
-{
-    rect->x = x;
-    rect->y = y;
-    rect->w = w;
-    rect->h = h;
-}
-
-void initDesktop() {
-    drawRGBContentToContent(screen, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    drawRGBContentToContent(screen_buf1, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    drawRGBContentToContent(screen_buf2, wndInfoList[0].content, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-}
-
+/*********************************************************
+ * System Calls
+**********************************************************/
 int sys_createwindow(void)
 {
     int x, y, cx, cy;
@@ -402,11 +407,11 @@ int sys_createwindow(void)
         if(wndInfoList[i].hwnd == -1)
         {
             wndInfoList[i].hwnd = i;
-            setRect(&wndInfoList[i].wndTitleBar, x, y - 30, cx, 30);
-            setRect(&wndInfoList[i].wndBody,x, y, cx, cy);
+            setRect(&wndInfoList[i].wndTitleBar, x, y - UTITLE_HEIGHT, cx, UTITLE_HEIGHT);
+            setRect(&wndInfoList[i].wndBody, x, y, cx, cy);
             wndInfoList[i].procPtr = proc;
             wndInfoList[i].wholeContent = content;
-            wndInfoList[i].content = content + 30 * cx;
+            wndInfoList[i].content = content + UTITLE_HEIGHT * cx;
             wndInfoList[i].title = title;
             drawWndTitleBar(i);
             initMsgQueue(&wndInfoList[i].msgQ);
@@ -432,8 +437,9 @@ int sys_repaintwindow()
     if (hwnd == focus) {
         switchuvm(wndInfoList[focus].procPtr);
         WndInfo* wnd = &wndInfoList[focus];
-        drawRGBContentToContent(screen_buf2, wnd->wholeContent, wnd->wndTitleBar.x, wnd->wndTitleBar.y, wnd->wndBody.w, wnd->wndBody.h + 30);
-        drawRGBContentToContent(screen, wnd->wholeContent, wnd->wndTitleBar.x, wnd->wndTitleBar.y, wnd->wndBody.w, wnd->wndBody.h + 30);
+        // printf(1, "titlebar:(%d, %d)\n", wnd->wndTitleBar.x, wnd->wndTitleBar.y);
+        drawBitmapToScreen(screen_buf, wnd->wholeContent, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
+        drawBitmapToScreen(screen, wnd->wholeContent, (Point){wnd->wndTitleBar.x, wnd->wndTitleBar.y}, (Size){wnd->wndBody.h + wnd->wndTitleBar.h, wnd->wndBody.w});
         if (proc == 0) {
             switchkvm();
         } else {
@@ -475,24 +481,6 @@ int sys_getmessage()
     return r;
 }
 
-int updateWindow(int hwnd, int x, int y, int w, int h)
-{
-    WndInfo * wnd = &wndInfoList[hwnd];
-    int bx = x;
-    int by = y;
-    int bh = wnd->wndBody.h;
-    int bw = wnd->wndBody.w;
-
-    x = x + wnd->wndBody.x;
-    y = y + wnd->wndBody.y;
-    /*void drawRGBContentToContentPart(RGB *buf, RGB *img, int x, int y,*/
-    /*int bx, int by, int bh, int bw, int h, int w)*/
-
-    drawRGBContentToContentPart(screen_buf2, wnd->content, x, y, bx, by, bh, bw, h, w);
-    drawRGBContentToContentPart(screen, wnd->content, x, y, bx, by, bh, bw, h, w);
-
-    return 0;
-}
 
 int sys_updatewindow()
 {

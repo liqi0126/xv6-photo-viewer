@@ -1,9 +1,9 @@
 // Shell.
 
 #include "types.h"
-#include "color.h"
 #include "user.h"
 #include "fcntl.h"
+#include "gui_base.h"
 
 // Parsed command representation
 #define EXEC  1
@@ -163,7 +163,6 @@ main(void)
   int res = read24BitmapFile("desktop.bmp", image, &h, &w);
   printf(1, "res: %d\n", res);
 
-  hello(image, h, w);
 
   while(1) ;
 

@@ -11,27 +11,12 @@ struct superblock;
 struct RGB;
 struct RGBA;
 struct message;
+struct Point;
+struct Size;
 
 // gui_kernal.c
 void            guiKernelHandleMsg(struct message *);
 void            initGUIKernel(void);
-
-// gui.c
-extern struct RGB* screen;
-extern struct RGB* screen_buf1;
-extern struct RGB* screen_buf2;
-void            drawMouse(struct RGB *buf, int mode, int x, int y);
-void            clearMouse(struct RGB *buf, struct RGB *temp_buf, int x, int y);
-void            initGUI(void);
-int             drawCharacter(struct RGB*, int, int, char, struct RGBA);
-void            drawString(struct RGB*, int, int, char *, struct RGBA);
-void            draw24Image(struct RGB *, struct RGB *, int , int , int , int);
-void            drawRGBContentToContent(struct RGB *, struct RGB *, int , int , int , int);
-void drawRGBContentToContentPart(struct RGB *,struct RGB *, int, int,
-    int, int, int, int, int, int);
-void drawScreenToScreen(struct RGB*, struct RGB*);
-int             drawCharacterToContent(struct RGB*, int, int,int,int, char, struct RGBA);
-void            drawStringToContent(struct RGB*, int, int, int, int, char *, struct RGBA);
 
 // bio.c
 void            binit(void);
