@@ -10,6 +10,7 @@
 #include "gui_base.h"
 #include "gui_screen.h"
 #include "gui_window.h"
+#include "math.h"
 
 struct spinlock guiKernelLock;
 
@@ -36,9 +37,6 @@ int max(int a, int b) {
     return (a > b) ? a : b;
 }
 
-int abs(int a) {
-    return (a >= 0)? a: -a;
-}
 
 void setRect(struct Rect *rect, int x, int y, int w, int h) {
     rect->x = x;

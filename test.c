@@ -7,7 +7,7 @@
 #include "fcntl.h"
 #include "fs.h"
 #include "stat.h"
-#include "xv6_api.h"
+#include "image_utils.h"
 
 #define PI 3.1415926536
 

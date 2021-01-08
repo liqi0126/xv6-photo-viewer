@@ -54,6 +54,36 @@ typedef struct Window {
     struct RGB* wholeContent;
 } Window;
 
+typedef struct Image
+{
+	char* image_name;
+    char* image_type;
+    int image_size;
+    struct RGB* data;
+    int scale_needed;
+    struct RGB* scale_data;
+    int h;
+    int scale_h;
+    int w;
+    int scale_w;
+    int save_time;
+	struct Image* prev;
+	struct Image* next;
+}Image;
+
+typedef struct ImageList
+{
+	struct Image* head;
+	struct Image* tail;
+}ImageList;
+
+typedef struct PBitmap
+{
+    int width;
+    int height;
+    struct RGB* data;
+}PBitmap;
+
 // gui_base.h
 void drawPoint(struct RGB* , struct RGB);
 void drawPointAlpha(struct RGB* , struct RGBA);

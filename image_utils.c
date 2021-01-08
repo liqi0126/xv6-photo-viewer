@@ -1,18 +1,17 @@
 #include "msg.h"
-#include "user.h"
+#include "image_utils.h"
 #include "types.h"
-#include "color.h"
 #include "fcntl.h"
 #include "fs.h"
 #include "stat.h"
-#include "xv6_api.h"
+#include "math.h"
 
 #define PI 3.1415926536
 
 RGB whiteRGB={255,255,255};
 
 // 排除边界，获取对应的RGB，对于错误的x，y，将isInPic置位0
-struct RGB * getColor(PBitmap* pic, int x, int y, int *isInPic)
+RGB * getColor(PBitmap* pic, int x, int y, int *isInPic)
 {
     if(x<0||x>pic->width||y<0||y>pic->height)
     {
