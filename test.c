@@ -1,16 +1,16 @@
 //Desktop
 
+#include "msg.h"
+#include "user.h"
 #include "types.h"
 #include "color.h"
-#include "user.h"
 #include "fcntl.h"
-#include "msg.h"
-#include "stat.h"
 #include "fs.h"
-
-
-//define the xv6 param
+#include "stat.h"
 #include "xv6_api.h"
+
+#define PI 3.1415926536
+
 Window wnd;
 
 RGB* save_icon;
@@ -28,10 +28,33 @@ RGB* rotate_left_90_icon;
 RGB* rotate_left_30_icon;
 RGB* rotate_right_30_icon;
 RGB* rotate_right_90_icon;
+RGB* image_list_up_icon;
+RGB* image_list_down_icon;
+RGB* bmp_icon;
+RGB* rollover_icon;
+RGB* turnaround_icon;
 RGB* edit_img;
 RGB* edit_img_test;
 RGB* edit_img_origin;
-RGB* image_list_preview;
+RGB* image_list_origin;
+RGB* image_title_origin;
+RGB* image_in_content;
+RGB* image_in_preview;
+RGB* image_in_preview_scaled;
+RGB* image_in_content_scaled;
+RGB* image_in_content_turned;
+RGB* image_in_content_rolledover;
+RGB* image_in_content_turnedaround;
+RGB* image_in_content_torollover;
+RGB* image_in_content_toturnaround;
+PBitmap* image_origin;
+PBitmap* image_origin_preview;
+PBitmap* image_origin_mirror;
+PBitmap* image_scale;
+PBitmap* image_scale_preview;
+PBitmap* image_turn;
+PBitmap* image_rollover;
+PBitmap* image_turnaround;
 char save_filename[] = "save-w5.bmp";
 char delete_filename[] = "delete-w3.bmp";
 char cut_filename[] = "cut-w3.bmp";
@@ -47,18 +70,33 @@ char rotate_right_30_filename[] = "30-right-w3.bmp";
 char rotate_right_90_filename[] = "90-right-w4.bmp";
 char zoomin_filename[] = "zoomin-w3.bmp";
 char zoomout_filename[] = "zoomout-w2.bmp";
+char image_list_up_filename[] = "up-w3.bmp";
+char image_list_down_filename[] = "down-w3.bmp";
+char bmp_filename[] = "bmp-w7.bmp";
+char rollover_filename[] = "rollover-w11.bmp";
+char turnaround_filename[] = "turnaround-w5.bmp";
 char filename[] = "testtest.bmp";
 
 RGB pencil_color={0,0,255};
-Size edit_img_size={410,380};
-Point edit_img_pos={120,30};
+Size edit_img_size={410,500};
+Point edit_img_pos={140,30};
+Size image_list_size={465,140};
+Point image_list_pos={0,80};
+Size image_title_size={18,200};
+Point image_title_pos={140,6};
+Size content_size={410,500};
+Point content_pos={140,30};
 const int pointSize = 5;
 int mouse_down = 0;
 int is_pencil = 0;
 int is_rubber = 0;
 int is_file = 0;
+int image_item = 0;
+float scale_degree = 1;
+float turn_degree = 0;
 
 ImageList *image_list;
+Image** image_show;
 
 void ImageListInit(ImageList *image_list)
 {
@@ -66,19 +104,62 @@ void ImageListInit(ImageList *image_list)
 	image_list->tail=0;
 }
 
-void ImageListAppend(char *filename, int size, int filename_len, ImageList *image_list)
+void ImageListAppend(char *filename, int size, int filename_len, ImageList *image_list, char* type, int type_len)
 {
 	Image *append_image=(Image*)malloc(sizeof(Image));
-    //memmove(append_image->image_name, filename, filename_len);
 	append_image->image_name=(char*)malloc(sizeof(char)*filename_len);
+    int len=0;
     for (int i = 0; i < filename_len; i++)
     {
         if(filename[i]!=' ')
         {
             append_image->image_name[i]=filename[i];
+            len++;
         }
     }
+    append_image->image_name[len]='\0';
+    len=0;
+    append_image->image_type=(char*)malloc(sizeof(char)*(type_len+1));
+    for (int i = 0; i < type_len; i++)
+    {
+        if(type[i]!=' ')
+        {
+            append_image->image_type[i]=type[i];
+            len++;
+        }
+    }
+    append_image->image_type[len]='\0';
     append_image->image_size=size;
+    append_image->data=(RGB*)malloc(sizeof(RGB)*append_image->image_size);
+    int h,w;
+    read24BitmapFile(append_image->image_name, append_image->data, &h, &w);
+    append_image->h=h;
+    append_image->w=w;
+    append_image->scale_needed=0;
+    image_origin_preview->height=h;
+    image_origin_preview->width=w;
+    image_origin_preview->data=append_image->data;
+    if(h>80 || w>80)
+    {
+        append_image->scale_needed=1;
+        float scale_tem=1;
+        if(h>=w)
+        {
+            scale_tem=(float)80/h;
+        }
+        else
+        {
+            scale_tem=(float)80/w;
+        }
+        image_scale_preview->height=image_origin_preview->height*scale_tem;
+        image_scale_preview->width=image_origin_preview->width*scale_tem;
+        append_image->scale_data=(RGB*)malloc(sizeof(RGB)*image_scale_preview->height*image_scale_preview->width);
+        image_scale_preview->data=append_image->scale_data;
+        picScale(image_origin_preview, image_scale_preview);
+        append_image->scale_h=image_scale_preview->height;
+        append_image->scale_w=image_scale_preview->width;
+    }
+    append_image->save_time=0;
 	if(image_list->tail==0)
 	{
 		image_list->head=append_image;
@@ -116,6 +197,54 @@ fmtname(char *path)
 
 void
 ls(char *path)
+{
+  char buf[512], *p;
+  int fd;
+  struct dirent de;
+  struct stat st;
+  
+  if((fd = open(path, 0)) < 0){
+    printf(2, "ls: cannot open %s\n", path);
+    return;
+  }
+  
+  if(fstat(fd, &st) < 0){
+    printf(2, "ls: cannot stat %s\n", path);
+    close(fd);
+    return;
+  }
+  
+  switch(st.type){
+  case T_FILE:
+    printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
+    break;
+  
+  case T_DIR:
+    if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
+      printf(1, "ls: path too long\n");
+      break;
+    }
+    strcpy(buf, path);
+    p = buf+strlen(buf);
+    *p++ = '/';
+    while(read(fd, &de, sizeof(de)) == sizeof(de)){
+      if(de.inum == 0)
+        continue;
+      memmove(p, de.name, DIRSIZ);
+      p[DIRSIZ] = 0;
+      if(stat(buf, &st) < 0){
+        printf(1, "ls: cannot stat %s\n", buf);
+        continue;
+      }
+      printf(1, "%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+    }
+    break;
+  }
+  close(fd);
+}
+
+void
+ls_new(char *path)
 {
   char buf[512], *p;
   int fd;
@@ -174,9 +303,7 @@ ls(char *path)
           char tem[DIRSIZ+1];
           memmove(tem, filetype, strlen(filetype));
           printf(1, "%s %d %d %d %s\n", filename, st.type, st.ino, st.size, tem);
-          ImageListAppend(filename, st.size, strlen(filename), image_list);
-          //ImageListAppend(filename, st.size, image_list);
-          //printf(1, "image %s", filename);
+          if(st.size<1000000) ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
       }
     }
     break;
@@ -185,7 +312,7 @@ ls(char *path)
 }
 
 int isMouseInContent(int x, int y) {
-   if (120 < x && x < 490 && 30 < y && y < 440){
+   if (140 + (500-content_size.w)/2 < x && x < 640-(500-content_size.w)/2 && 30 + (410-content_size.h)/2 < y && y < 440 - (410-content_size.h)/2){
        return 1;
    }
    else {
@@ -194,21 +321,21 @@ int isMouseInContent(int x, int y) {
 }
 
 int isMouseInPencilColorButton(int x, int y) {
-    if (415 <= x && x <= 435 && 5 <= y && y <= 25){
+    if (555 <= x && x <= 575 && 5 <= y && y <= 25){
         pencil_color = (RGB){0,0,255};
         return 1;
     }
-    else if(385 <= x && x <= 405 && 5 <= y && y <= 25)
+    else if(525 <= x && x <= 545 && 5 <= y && y <= 25)
     {
         pencil_color = (RGB){0,255,0};
         return 1;
     }
-    else if(355 <= x && x <= 375 && 5 <= y && y <= 25)
+    else if(495 <= x && x <= 515 && 5 <= y && y <= 25)
     {
         pencil_color = (RGB){255,0,0};
         return 1;
     }
-    else if(325 <= x && x <= 345 && 5 <= y && y <= 25)
+    else if(465 <= x && x <= 485 && 5 <= y && y <= 25)
     {
         pencil_color = (RGB){128,0,128};
         return 1;
@@ -219,7 +346,7 @@ int isMouseInPencilColorButton(int x, int y) {
 }
 
 int isMouseInRubberButton(int x, int y) {
-   if (470 <= x && x <= 500 && 0 <= y && y <= 30){
+   if (610 < x && x <= 640 && 0 <= y && y <= 30){
         pencil_color = (RGB){255,255,255};
         if(is_rubber == 0) is_rubber = 1;
         else if(is_rubber == 1) is_rubber = 0;
@@ -231,7 +358,7 @@ int isMouseInRubberButton(int x, int y) {
 }
 
 int isMouseInPencilButton(int x, int y) {
-   if (440 <= x && x <= 470 && 0 <= y && y <= 30){
+   if (580 <= x && x <= 610 && 0 <= y && y <= 30){
         pencil_color = (RGB){0,0,255};
         if(is_pencil == 0) is_pencil = 1;
         else if(is_pencil == 1) is_pencil = 0;
@@ -246,15 +373,210 @@ int isMouseInSaveButton(int x, int y) {
    if (0 <= x && x <= 30 && 0 <= y && y <= 30){
         struct RGB *t;
         struct RGB *o;
-        edit_img = malloc(edit_img_size.h*edit_img_size.w*3);
-        int max_line = edit_img_size.w;
-        for (int i = 0; i < edit_img_size.h; i++) {
-            o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
-            t = edit_img + i * edit_img_size.w;
+        printf(1, "Save begin.\n");
+        edit_img = malloc(content_size.h*content_size.w*3);
+        int max_line = content_size.w;
+        for (int i = 0; i < content_size.h; i++) {
+            o = wnd.content + (content_pos.y + i) * wnd.size.w + content_pos.x;
+            t = edit_img + i * content_size.w;
             memmove(t, o, max_line * 3);
         }
-        write24BitmapFile(filename, edit_img, edit_img_size.h, edit_img_size.w);
+        image_show[image_item-1]->save_time=image_show[image_item-1]->save_time+1;
+        int filename_len = strlen(image_show[image_item-1]->image_name);
+        int filetype_len = strlen(image_show[image_item-1]->image_type);
+        char* save_filename;
+        save_filename=malloc(sizeof(char)*(filename_len+10));
+        for(int i=0;i<filename_len-filetype_len-1;i++)
+        {
+            save_filename[i]=image_show[image_item-1]->image_name[i];
+        }
+        save_filename[filename_len-filetype_len-1]='-';
+        save_filename[filename_len-filetype_len]='v';
+        char s[100];
+        int k=0;
+        int save_time_tem=image_show[image_item-1]->save_time;
+        do{
+           s[k++]=save_time_tem%10+'0';
+        }
+        while ((save_time_tem/=10)>0);
+        s[k]='.';
+        int index = filename_len-filetype_len+1;
+        for(int j=k-1;j>=0;j--)
+        {
+            save_filename[index] = s[j];
+            index++;
+        }
+        save_filename[index]='.';
+        index++;
+        for(int i=index;i<index+filetype_len;i++)
+        {
+            save_filename[i]=image_show[image_item-1]->image_type[i-index];
+        }
+        save_filename[index+filetype_len]='\0';
+        //printf(1, "%d %s %s %s %d %d\n", image_show[image_item-1]->save_time, save_filename, image_show[image_item-1]->image_name, image_show[image_item-1]->image_type, filename_len, filetype_len);
+        write24BitmapFile(save_filename, edit_img, content_size.h, content_size.w);
+        printf(1, "Save succeed.\n");
+        ImageListAppend(save_filename, content_size.h*content_size.w*3, strlen(save_filename), image_list, "bmp", 3);
         free(edit_img);
+        free(save_filename);
+        api_repaint(&wnd);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutButton(int x, int y) {
+   if (60 < x && x <= 90 && 0 <= y && y <= 30){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+void setImageList()
+{
+    RGBA image_name_color = {255,0,0,0};
+    struct RGB *t;
+    struct RGB *o;
+    int max_line = image_list_size.w;
+    for (int i = 0; i < image_list_size.h; i++) {
+        o = wnd.content + (image_list_pos.y + i) * wnd.size.w + image_list_pos.x;
+        t = image_list_origin + i * image_list_size.w;
+        memmove(o, t, max_line * 3);
+    }
+    for(int i=0;i<3;i++)
+    {
+        if(image_show[i]->scale_needed==1)
+        {
+            int pos_y=120+130*i-image_show[i]->scale_h/2;
+            int pos_x=70-image_show[i]->scale_w/2;
+            api_paint24BitmapToContent(&wnd, image_show[i]->scale_data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_show[i]->scale_h,image_show[i]->scale_w},(Size){image_show[i]->scale_h,image_show[i]->scale_w});
+        }
+        else
+        {
+            int pos_y=120+130*i-image_show[i]->h/2;
+            int pos_x=70-image_show[i]->w/2;
+            api_paint24BitmapToContent(&wnd, image_show[i]->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_show[i]->h,image_show[i]->w},(Size){image_show[i]->h,image_show[i]->w});
+        }
+        int name_len=strlen(image_show[i]->image_name);
+        int offset_x;
+        if(name_len>15)
+        {
+            char* image_name_slug;
+            image_name_slug=(char*)malloc(sizeof(char)*name_len);
+            for(int j=0;j<6;j++) 
+            {
+                image_name_slug[j]=image_show[i]->image_name[j];
+                image_name_slug[14-j]=image_show[i]->image_name[name_len-1-j];
+            }
+            image_name_slug[6]='.';
+            image_name_slug[7]='.';
+            image_name_slug[8]='.';
+            name_len=15;
+            offset_x=(140-name_len*9)/2;
+            api_drawString(&wnd, offset_x, 80+130*i+90, image_name_slug, image_name_color);
+        }
+        else if(name_len<=15 && name_len>=0)
+        {
+            offset_x=(140-name_len*9)/2;       
+            api_drawString(&wnd, offset_x, 80+130*i+90, image_show[i]->image_name, image_name_color);
+        }
+        api_repaint(&wnd);
+    }
+}
+
+int isMouseInListUpButton(int x, int y) {
+   if (47 <= x && x <= 82 && 45 <= y && y <= 65){
+        if(image_show[0]->prev==0) return 1;
+        else
+        {
+            image_show[2]=image_show[1];
+            image_show[1]=image_show[0];
+            image_show[0]=image_show[0]->prev;
+            setImageList();
+            api_repaint(&wnd);
+        }
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInListDownButton(int x, int y) {
+   if (47 <= x && x <= 82 && 465 <= y && y <= 485){
+        if(image_show[2]->next==0) return 1;
+        else
+        {
+            image_show[0]=image_show[1];
+            image_show[1]=image_show[2];
+            image_show[2]=image_show[2]->next;
+            setImageList();
+            api_repaint(&wnd);
+        }
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+void showImageInContent()
+{
+    RGBA image_name_color = {255,0,0,0};
+    struct RGB *t;
+    struct RGB *o;
+    int max_line = edit_img_size.w;
+    for (int i = 0; i < edit_img_size.h; i++) {
+        o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+        t = edit_img_origin + i * edit_img_size.w;
+        memmove(o, t, max_line * 3);
+    }
+    max_line = image_title_size.w;
+    for (int i = 0; i < image_title_size.h; i++) {
+        o = wnd.content + (image_title_pos.y + i) * wnd.size.w + image_title_pos.x;
+        t = image_title_origin + i * image_title_size.w;
+        memmove(o, t, max_line * 3);
+    }
+    int pos_y=235-image_show[image_item-1]->h/2;
+    int pos_x=390-image_show[image_item-1]->w/2;
+    api_paint24BitmapToContent(&wnd, image_show[image_item-1]->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_show[image_item-1]->h,image_show[image_item-1]->w},(Size){image_show[image_item-1]->h,image_show[image_item-1]->w});
+    api_drawString(&wnd, 140, 6, image_show[image_item-1]->image_name, image_name_color);
+    content_size=(Size){image_show[image_item-1]->h,image_show[image_item-1]->w};
+    content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+    scale_degree=1;
+    turn_degree=0;
+    image_origin->data=image_show[image_item-1]->data;
+    image_origin->height=content_size.h;
+    image_origin->width=content_size.w;
+    image_origin_mirror->height=content_size.h;
+    image_origin_mirror->width=content_size.w;
+    image_in_content_torollover=(RGB*)malloc(sizeof(RGB)*image_origin->height*image_origin->width);
+    memmove(image_in_content_torollover, image_show[image_item-1]->data, image_origin->height*image_origin->width*3);
+    image_in_content_toturnaround=(RGB*)malloc(sizeof(RGB)*image_origin->height*image_origin->width);
+    memmove(image_in_content_toturnaround, image_show[image_item-1]->data, image_origin->height*image_origin->width*3);
+    api_repaint(&wnd);
+}
+
+int isMouseInListItem(int x, int y) {
+   if (30 <= x && x <= 110 && 80 <= y && y <= 188){
+        image_item = 1;
+        showImageInContent();
+        return 1;
+   }
+   else if (30 <= x && x <= 110 && 210 <= y && y <= 318)
+   {
+        image_item = 2;
+        showImageInContent();
+        return 1;
+   }
+   else if (30 <= x && x <= 110 && 340 <= y && y <= 448)
+   {
+        image_item = 3;
+        showImageInContent();
         return 1;
    }
    else {
@@ -272,6 +594,194 @@ int isMouseInDeleteButton(int x, int y) {
             t = edit_img_origin + i * edit_img_size.w;
             memmove(o, t, max_line * 3);
         }
+        max_line = image_title_size.w;
+        for (int i = 0; i < image_title_size.h; i++) {
+            o = wnd.content + (image_title_pos.y + i) * wnd.size.w + image_title_pos.x;
+            t = image_title_origin + i * image_title_size.w;
+            memmove(o, t, max_line * 3);
+        }
+        image_item = 0;
+        content_size=(Size){410,380};
+        content_pos=(Point){140,30};
+        api_repaint(&wnd);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+void image_scale_process(float zoom_degree)
+{
+    scale_degree=scale_degree*zoom_degree;
+    image_scale->height=image_origin->height*scale_degree;
+    image_scale->width=image_origin->width*scale_degree;
+    image_in_content_scaled=(RGB*)malloc(sizeof(RGB)*image_scale->height*image_scale->width);
+    image_scale->data=image_in_content_scaled;
+    struct RGB *t;
+    struct RGB *o;
+    int max_line = edit_img_size.w;
+    for (int i = 0; i < edit_img_size.h; i++) {
+        o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+        t = edit_img_origin + i * edit_img_size.w;
+        memmove(o, t, max_line * 3);
+    }
+    picScale(image_origin, image_scale);
+    int pos_y=235-image_scale->height/2;
+    int pos_x=390-image_scale->width/2;
+    api_paint24BitmapToContent(&wnd, image_scale->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_scale->height,image_scale->width},(Size){image_scale->height,image_scale->width});
+    content_size=(Size){image_scale->height,image_scale->width};
+    content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+    free(image_in_content_scaled);
+    api_repaint(&wnd);
+}
+
+int isMouseInZoominButton(int x, int y) {
+   if (140 < x && x <= 200 && 440 <= y && y <= 500){
+        image_scale_process(2);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInZoomoutButton(int x, int y) {
+   if (200 < x && x <= 260 && 440 <= y && y <= 500){
+        image_scale_process(0.5);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+void image_turn_process(float rotate_degree)
+{
+    turn_degree=turn_degree+rotate_degree;
+    image_turn->height=image_origin->height;
+    image_turn->width=image_origin->width;
+    printf(1, "0 %d, %d", image_turn->width, image_turn->height);
+    getTurnSize(&(image_turn->width), &(image_turn->height), turn_degree);
+    printf(1, "1 %d, %d", image_turn->width, image_turn->height);
+    image_in_content_turned=(RGB*)malloc(sizeof(RGB)*image_turn->height*image_turn->width);
+    image_turn->data=image_in_content_turned;
+    struct RGB *t;
+    struct RGB *o;
+    int max_line = edit_img_size.w;
+    for (int i = 0; i < edit_img_size.h; i++) {
+        o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+        t = edit_img_origin + i * edit_img_size.w;
+        memmove(o, t, max_line * 3);
+    }
+    picTurn(image_origin, image_turn, turn_degree);
+    int pos_y=235-image_turn->height/2;
+    int pos_x=390-image_turn->width/2;
+    api_paint24BitmapToContent(&wnd, image_turn->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_turn->height,image_turn->width},(Size){image_turn->height,image_turn->width});
+    content_size=(Size){image_turn->height,image_turn->width};
+    content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+    free(image_in_content_turned);
+    api_repaint(&wnd);
+}
+
+int isMouseInRotateLeftNinetyButton(int x, int y) {
+   if (260 < x && x <= 325 && 440 <= y && y <= 500){
+        image_turn_process(-PI/2);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInRotateLeftThirtyButton(int x, int y) {
+   if (325 < x && x <= 390 && 440 <= y && y <= 500){
+        image_turn_process(-PI/6);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInRotateRightThirtyButton(int x, int y) {
+   if (390 < x && x <= 455 && 440 <= y && y <= 500){
+        image_turn_process(PI/6);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInRotateRightNinetyButton(int x, int y) {
+   if (455 < x && x <= 520 && 440 <= y && y <= 500){
+        image_turn_process(PI/2);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInRolloverButton(int x, int y) {
+   if (520 < x && x <= 580 && 440 <= y && y <= 500){
+        image_origin_mirror->data=image_in_content_torollover;
+        image_rollover->height=image_origin_mirror->height;
+        image_rollover->width=image_origin_mirror->width;
+        image_in_content_rolledover=(RGB*)malloc(sizeof(RGB)*image_rollover->height*image_rollover->width);
+        image_rollover->data=image_in_content_rolledover;
+        struct RGB *t;
+        struct RGB *o;
+        int max_line = edit_img_size.w;
+        for (int i = 0; i < edit_img_size.h; i++) {
+            o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+            t = edit_img_origin + i * edit_img_size.w;
+            memmove(o, t, max_line * 3);
+        }
+        picRollingOver(image_origin_mirror, image_rollover);
+        int pos_y=235-image_rollover->height/2;
+        int pos_x=390-image_rollover->width/2;
+        api_paint24BitmapToContent(&wnd, image_rollover->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_rollover->height,image_rollover->width},(Size){image_rollover->height,image_rollover->width});
+        content_size=(Size){image_rollover->height,image_rollover->width};
+        content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+        free(image_in_content_torollover);
+        image_in_content_torollover=(RGB*)malloc(sizeof(RGB)*image_rollover->height*image_rollover->width);
+        memmove(image_in_content_torollover, image_in_content_rolledover, image_rollover->height*image_rollover->width*3);
+        free(image_in_content_rolledover);
+        api_repaint(&wnd);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInTurnaroundButton(int x, int y) {
+   if (580 < x && x <= 640 && 440 <= y && y <= 500){
+        image_origin_mirror->data=image_in_content_toturnaround;
+        image_turnaround->height=image_origin_mirror->height;
+        image_turnaround->width=image_origin_mirror->width;
+        image_in_content_turnedaround=(RGB*)malloc(sizeof(RGB)*image_turnaround->height*image_turnaround->width);
+        image_turnaround->data=image_in_content_turnedaround;
+        struct RGB *t;
+        struct RGB *o;
+        int max_line = edit_img_size.w;
+        for (int i = 0; i < edit_img_size.h; i++) {
+            o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+            t = edit_img_origin + i * edit_img_size.w;
+            memmove(o, t, max_line * 3);
+        }
+        picTurnAround(image_origin_mirror, image_turnaround);
+        int pos_y=235-image_turnaround->height/2;
+        int pos_x=390-image_turnaround->width/2;
+        api_paint24BitmapToContent(&wnd, image_turnaround->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_turnaround->height,image_turnaround->width},(Size){image_turnaround->height,image_turnaround->width});
+        content_size=(Size){image_turnaround->height,image_turnaround->width};
+        content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+        free(image_in_content_toturnaround);
+        image_in_content_toturnaround=(RGB*)malloc(sizeof(RGB)*image_turnaround->height*image_turnaround->width);
+        memmove(image_in_content_toturnaround, image_in_content_turnedaround, image_turnaround->height*image_turnaround->width*3);
+        free(image_in_content_turnedaround);
         api_repaint(&wnd);
         return 1;
    }
@@ -302,6 +812,50 @@ void MsgProc(struct message * msg)
             break;
         }
         if(isMouseInDeleteButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInListUpButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInListDownButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInListItem(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInZoominButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInZoomoutButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInRotateLeftNinetyButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInRotateLeftThirtyButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInRotateRightNinetyButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInRotateRightThirtyButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInRolloverButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
+        if(isMouseInTurnaroundButton(msg->params[0], msg->params[1]))
         {
             break;
         }
@@ -343,7 +897,12 @@ void MsgProc(struct message * msg)
         free(rotate_left_30_icon);
         free(rotate_right_30_icon);
         free(rotate_right_90_icon);
+        free(image_list_up_icon);
+        free(image_list_down_icon);
+        free(bmp_icon);
         free(edit_img_origin);
+        free(image_title_origin);
+        free(image_list_origin);
         api_destroywindow(&wnd);
         break;
     }
@@ -353,10 +912,10 @@ main(int argc, char *argv[])
 {
     //int pra = argv[1][0] - '0';
     wnd.pos.x = 100;
-    wnd.pos.y = 100;
+    wnd.pos.y = 60;
     //wnd.pos.x = 160;
     //wnd.pos.y = 30;
-    wnd.size.w = 500;
+    wnd.size.w = 640;
     wnd.size.h = 500;
     wnd.title = "PhotoViewer";
     
@@ -376,6 +935,11 @@ main(int argc, char *argv[])
     rotate_left_30_icon = malloc(60*65*3);
     rotate_right_30_icon = malloc(60*65*3);
     rotate_right_90_icon = malloc(60*65*3);
+    image_list_up_icon = malloc(35*20*3);
+    image_list_down_icon = malloc(35*20*3);
+    bmp_icon = malloc(80*80*3);
+    rollover_icon = malloc(60*60*3);
+    turnaround_icon = malloc(60*60*3);
     edit_img_test = malloc(edit_img_size.w*edit_img_size.h*3);
     
     api_createwindow(&wnd);
@@ -396,24 +960,33 @@ main(int argc, char *argv[])
     read24BitmapFile(rotate_left_30_filename, rotate_left_30_icon, &h, &w);
     read24BitmapFile(rotate_right_30_filename, rotate_right_30_icon, &h, &w);
     read24BitmapFile(rotate_right_90_filename, rotate_right_90_icon, &h, &w);
+    read24BitmapFile(image_list_down_filename, image_list_down_icon, &h, &w);
+    read24BitmapFile(image_list_up_filename, image_list_up_icon, &h, &w);
+    read24BitmapFile(bmp_filename, bmp_icon, &h, &w);
+    read24BitmapFile(rollover_filename, rollover_icon, &h, &w);
+    read24BitmapFile(turnaround_filename, turnaround_icon, &h, &w);
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
     api_paint24BitmapToContent(&wnd, save_icon, (Point){0,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
     api_paint24BitmapToContent(&wnd, delete_icon, (Point){30,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, pen_icon, (Point){440,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, rubber_icon, (Point){470,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, red_icon, (Point){415,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, green_icon, (Point){385,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, blue_icon, (Point){355,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, purple_icon, (Point){325,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
+    api_paint24BitmapToContent(&wnd, pen_icon, (Point){580,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
+    api_paint24BitmapToContent(&wnd, rubber_icon, (Point){610,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
+    api_paint24BitmapToContent(&wnd, red_icon, (Point){555,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
+    api_paint24BitmapToContent(&wnd, green_icon, (Point){525,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
+    api_paint24BitmapToContent(&wnd, blue_icon, (Point){495,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
+    api_paint24BitmapToContent(&wnd, purple_icon, (Point){465,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
     api_paint24BitmapToContent(&wnd, cut_icon, (Point){60,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, zoomin_icon, (Point){120,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
-    api_paint24BitmapToContent(&wnd, zoomout_icon, (Point){180,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
-    api_paint24BitmapToContent(&wnd, rotate_left_90_icon, (Point){240,440}, (Point){0,0}, (Size){60,63},(Size){60,63});
-    api_paint24BitmapToContent(&wnd, rotate_left_30_icon, (Point){305,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
-    api_paint24BitmapToContent(&wnd, rotate_right_30_icon, (Point){370,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
-    api_paint24BitmapToContent(&wnd, rotate_right_90_icon, (Point){435,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
+    api_paint24BitmapToContent(&wnd, zoomin_icon, (Point){140,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
+    api_paint24BitmapToContent(&wnd, zoomout_icon, (Point){200,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
+    api_paint24BitmapToContent(&wnd, rotate_left_90_icon, (Point){260,440}, (Point){0,0}, (Size){60,63},(Size){60,63});
+    api_paint24BitmapToContent(&wnd, rotate_left_30_icon, (Point){325,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
+    api_paint24BitmapToContent(&wnd, rotate_right_30_icon, (Point){390,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
+    api_paint24BitmapToContent(&wnd, rotate_right_90_icon, (Point){455,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
+    api_paint24BitmapToContent(&wnd, rollover_icon, (Point){520,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
+    api_paint24BitmapToContent(&wnd, turnaround_icon, (Point){580,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
+    api_paint24BitmapToContent(&wnd, image_list_up_icon, (Point){47,45}, (Point){0,0}, (Size){20,35},(Size){20,35});
+    api_paint24BitmapToContent(&wnd, image_list_down_icon, (Point){47,465}, (Point){0,0}, (Size){20,35},(Size){20,35});
     //api_paint24Bitmap(&wnd, rotate_left_90_icon, (Point){180,440}, (Size){60,65});
 
     struct RGB *t;
@@ -426,30 +999,44 @@ main(int argc, char *argv[])
         memmove(t, o, max_line * 3);
     }
 
+    image_list_origin = malloc(image_list_size.h*image_list_size.w*3);
+    max_line = image_list_size.w;
+    for (int i = 0; i < image_list_size.h; i++) {
+        o = wnd.content + (image_list_pos.y + i) * wnd.size.w + image_list_pos.x;
+        t = image_list_origin + i * image_list_size.w;
+        memmove(t, o, max_line * 3);
+    }
+
+    image_title_origin = malloc(image_title_size.h*image_title_size.w*3);
+    max_line = image_title_size.w;
+    for (int i = 0; i < image_title_size.h; i++) {
+        o = wnd.content + (image_title_pos.y + i) * wnd.size.w + image_title_pos.x;
+        t = image_title_origin + i * image_title_size.w;
+        memmove(t, o, max_line * 3);
+    }
+
+    image_origin=(PBitmap*)malloc(sizeof(PBitmap));
+    image_origin_preview=(PBitmap*)malloc(sizeof(PBitmap));
+    image_origin_mirror=(PBitmap*)malloc(sizeof(PBitmap));
+    image_scale=(PBitmap*)malloc(sizeof(PBitmap));
+    image_scale_preview=(PBitmap*)malloc(sizeof(PBitmap));
+    image_turn=(PBitmap*)malloc(sizeof(PBitmap));
+    image_turnaround=(PBitmap*)malloc(sizeof(PBitmap));
+    image_rollover=(PBitmap*)malloc(sizeof(PBitmap));
+    image_in_content = malloc(edit_img_size.w*edit_img_size.h*3);
+
     image_list=(ImageList* )malloc(sizeof(ImageList));
 	ImageListInit(image_list);
+    ls_new(".");
     ls(".");
+    Image *header;
+    header = image_list->head;
+    image_show=(Image**)malloc(sizeof(Image*)*3);
+    image_show[0] = header;
+    image_show[1] = header->next;
+    image_show[2] = header->next->next;
+    setImageList();
 
-    //Image *now;
-    //now = image_list->head;
-    //now = now->next->next;
-    //printf(1, "image %s", now->image_name);
-    //image_list_preview = malloc(now->image_size);
-    //printf(1, "image %d", now->image_size);
-    //read24BitmapFile(now->image_name, image_list_preview, &h, &w);
-    //api_paint24BitmapToContent(&wnd, image_list_preview, (Point){200,200}, (Point){0,0}, (Size){h,w},(Size){h,w});
-    
-    /*struct RGB color;*/
-    /*color.R = 255;*/
-    /*color.G = 0;*/
-    /*color.B = 0;*/
-    //api_drawButton(&wnd, (Point){100, 200},(Size) {50, 50},"HAHA" );
-    /*RGBA color;*/
-    /*color.R =255;*/
-    /*color.G =0;*/
-    /*color.B =0;*/
-    /*color.A =255;*/
-    /*api_drawString(&wnd, 50, 50, "2333", color);*/
     api_repaint(&wnd);
     api_exec(&wnd, &MsgProc);
     return 0;

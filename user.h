@@ -7,6 +7,7 @@ struct Point;
 struct Size;
 struct message;
 struct Rect;
+struct PBitmap;
 
 // system calls
 int fork(void);
@@ -77,3 +78,20 @@ int api_drawString(struct Window *, int, int, char *, struct RGBA);
 int api_destroywindow(struct Window *wnd);
 int api_drawRect(struct Window *, struct Point, struct Size, struct RGB);
 int api_drawButton(struct Window *, struct Point, struct Size, char *);
+
+// image_utils.c
+int picScale(struct PBitmap * src, struct PBitmap * dst);
+int mixColor(struct PBitmap * src, float fx, float fy, struct RGB * dst);
+struct RGB * getColor(struct PBitmap * pic, int x, int y, int* isInPic);
+int picTurn(struct PBitmap * src, struct PBitmap * dst, float angle);
+int getTurnSize(int* width, int* height, float angle);
+int picRollingOver(struct PBitmap * src, struct PBitmap * dst);
+int picTurnAround(struct PBitmap * src, struct PBitmap * dst);
+int setColor(struct RGB * src, struct RGB * dst);
+
+// math.c
+float abs(float x);
+float sin(float x);
+float cos(float x);
+float pow(float a, int b);
+float sqrt(float number);

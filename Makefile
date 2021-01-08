@@ -138,7 +138,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o bitmap.o xv6_api.o
+ULIB = ulib.o usys.o printf.o umalloc.o bitmap.o xv6_api.o image_utils.o math.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -188,8 +188,6 @@ IMGS=desktop.bmp\
      editor.bmp\
      test.bmp\
      plane.bmp\
-     clock.bmp\
-     editor.bmp\
      painter.bmp\
      background.bmp\
      bullet1.bmp\
@@ -212,6 +210,9 @@ IMGS=desktop.bmp\
 	 90-right-w4.bmp\
 	 30-left-w3.bmp\
 	 30-right-w3.bmp\
+	 up-w3.bmp\
+	 down-w3.bmp\
+	 bmp-w7.bmp\
 	 images.bmp\
      0.bmp\
      1.bmp\
@@ -224,6 +225,8 @@ IMGS=desktop.bmp\
      8.bmp\
      9.bmp\
      separator.bmp\
+	 turnaround-w5.bmp\
+	 rollover-w11.bmp\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)
