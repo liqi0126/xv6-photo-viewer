@@ -40,10 +40,13 @@ RGB* image_list_down_icon;
 RGB* bmp_icon;
 RGB* rollover_icon;
 RGB* turnaround_icon;
+RGB* cut_confirm_icon;
+RGB* cut_cancel_icon;
 RGB* edit_img;
 RGB* edit_img_test;
 RGB* edit_img_origin;
 RGB* cut_img_save;
+RGB* cut_img_result;
 RGB* image_list_origin;
 RGB* image_title_origin;
 RGB* image_in_content;
@@ -83,6 +86,8 @@ char image_list_down_filename[] = "down-w3.bmp";
 char bmp_filename[] = "bmp-w7.bmp";
 char rollover_filename[] = "rollover-w11.bmp";
 char turnaround_filename[] = "turnaround-w5.bmp";
+char cut_confirm_filename[] = "ok-w3.bmp";
+char cut_cancel_filename[] = "no-w3.bmp";
 char filename[] = "testtest.bmp";
 
 RGB pencil_color={0,0,255};
@@ -104,15 +109,20 @@ const int cut_box_dash_width = 6;
 const int cut_box_dash_corner_width = 10;
 const int cut_box_dash_height = 2;
 const int cut_box_dash_corner_height = 5;
+const int cut_box_button_width = 20;
+const int cut_box_button_height = 20;
 int mouse_down = 0;
 int is_pencil = 0;
 int is_rubber = 0;
 int is_cut = 0;
 int is_file = 0;
+int has_content = 0;
 int image_item = 0;
+int gif_frame = 1;
+int current_gif_img_num = 0;
+Image* current_gif_img;
 float scale_degree = 1;
 float turn_degree = 0;
-
 
 ImageList *image_list;
 Image** image_show;
@@ -144,6 +154,25 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         }
     }
     append_image->image_name[len]='\0';
+    append_image->image_size=size;
+    append_image->data=(RGB*)malloc(sizeof(RGB)*append_image->image_size);
+    int h,w;
+    read24BitmapFile(append_image->image_name, append_image->data, &h, &w);
+    append_image->h=h;
+    append_image->w=w;
+    if(strcmp(append_image->image_name, "enemy_big.bmp")==0 || strcmp(append_image->image_name, "enemy_middle.bmp")==0 || strcmp(append_image->image_name, "enemy_small.bmp")==0)
+    {
+        append_image->gif_img_num = 6;
+    }
+    else if(strcmp("giphy_small.bmp", append_image->image_name)==0)
+    {
+        append_image->gif_img_num = 27;
+    }
+    else
+    {
+        append_image->gif_img_num = 1;
+    }
+    append_image->is_onshow = 0;
     len=0;
     append_image->image_type=(char*)malloc(sizeof(char)*(type_len+1));
     for (int i = 0; i < type_len; i++)
@@ -155,12 +184,6 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         }
     }
     append_image->image_type[len]='\0';
-    append_image->image_size=size;
-    append_image->data=(RGB*)malloc(sizeof(RGB)*append_image->image_size);
-    int h,w;
-    read24BitmapFile(append_image->image_name, append_image->data, &h, &w);
-    append_image->h=h;
-    append_image->w=w;
     append_image->scale_needed=0;
     image_origin_preview->height=h;
     image_origin_preview->width=w;
@@ -331,6 +354,7 @@ ls_new(char *path)
           printf(1, "%s %d %d %d %s\n", filename, st.type, st.ino, st.size, tem);
           // adjust image size here
           if(st.size<1000000) ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
+        //   else if(st.size == 1080138) ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
       }
     }
     break;
@@ -339,8 +363,32 @@ ls_new(char *path)
 }
 
 int isMouseInCutBoxLeft(int x, int y) {
-   if (cutbox_pos.x-cut_box_dash_corner_width <= x && x <= cutbox_pos.x 
-        && cutbox_pos.y <= y && y <= cutbox_pos.y + cutbox_size.h ){
+   if (cutbox_pos.x-cut_box_dash_corner_height <= x && x <= cutbox_pos.x 
+        && cutbox_pos.y + cut_box_dash_corner_width <= y && y <= cutbox_pos.y + cutbox_size.h - cut_box_dash_corner_width ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxUpLeft(int x, int y) {
+   if ( ( cutbox_pos.x-cut_box_dash_corner_height <= x && x <= cutbox_pos.x 
+            && cutbox_pos.y - cut_box_dash_corner_height <= y && y < cutbox_pos.y + cut_box_dash_corner_width ) 
+        || ( cutbox_pos.x-cut_box_dash_corner_height <= x && x < cutbox_pos.x + cut_box_dash_corner_width
+            && cutbox_pos.y - cut_box_dash_corner_height <= y && y <= cutbox_pos.y ) ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxDownLeft(int x, int y) {
+   if ( ( cutbox_pos.x-cut_box_dash_corner_height <= x && x <= cutbox_pos.x 
+            && cutbox_pos.y + cutbox_size.h - cut_box_dash_corner_width < y && y <= cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height ) 
+        || ( cutbox_pos.x-cut_box_dash_corner_height <= x && x < cutbox_pos.x + cut_box_dash_corner_width
+            && cutbox_pos.y + cutbox_size.h <= y && y <= cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height ) ){
         return 1;
    }
    else {
@@ -349,8 +397,8 @@ int isMouseInCutBoxLeft(int x, int y) {
 }
 
 int isMouseInCutBoxRight(int x, int y) {
-   if (cutbox_pos.x + cutbox_size.w <= x && x <= cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_width 
-        && cutbox_pos.y <= y && y <= cutbox_pos.y + cutbox_size.h ){
+   if (cutbox_pos.x + cutbox_size.w <= x && x < cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height 
+        && cutbox_pos.y + cut_box_dash_corner_width <= y && y <= cutbox_pos.y + cutbox_size.h - cut_box_dash_corner_width ){
         return 1;
    }
    else {
@@ -358,9 +406,63 @@ int isMouseInCutBoxRight(int x, int y) {
    }
 }
 
-int isMouseInCutBox(int x, int y) {
-   if ( content_pos.x <= x && x <= content_pos.x + content_size.w
-        && content_pos.y <= y && y <= content_pos.y + content_size.h ){
+int isMouseInCutBoxUpRight(int x, int y) {
+   if ( ( cutbox_pos.x + cutbox_size.w -cut_box_dash_corner_width < x && x <= cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height
+            && cutbox_pos.y - cut_box_dash_corner_height <= y && y <= cutbox_pos.y ) 
+        || ( cutbox_pos.x + cutbox_size.w <= x && x <= cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height
+            && cutbox_pos.y - cut_box_dash_corner_height <= y && y <= cutbox_pos.y + cut_box_dash_corner_width ) ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxDownRight(int x, int y) {
+   if ( ( cutbox_pos.x + cutbox_size.w -cut_box_dash_corner_width < x && x < cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height
+            && cutbox_pos.y + cutbox_size.h <= y && y <= cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height ) 
+        || ( cutbox_pos.x + cutbox_size.w <= x && x < cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height
+            && cutbox_pos.y + cutbox_size.h - cut_box_dash_corner_width <= y && y <= cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height ) ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxUp(int x, int y) {
+   if (cutbox_pos.x + cut_box_dash_corner_width <= x && x <= cutbox_pos.x + cutbox_size.w - cut_box_dash_corner_width
+        && cutbox_pos.y - cut_box_dash_corner_height <= y && y <= cutbox_pos.y ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxDown(int x, int y) {
+   if (cutbox_pos.x + cut_box_dash_corner_width <= x && x <= cutbox_pos.x + cutbox_size.w - cut_box_dash_corner_width
+        && cutbox_pos.y + cutbox_size.h <= y && y <= cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxConfirmButton(int x, int y) {
+   if (cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height <= x && x < cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_height + cut_box_button_width
+        && cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height - cut_box_button_width <= y && y <= cutbox_pos.y + cutbox_size.h + cut_box_dash_corner_height ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isCutBoxInContent(int x, int y, int width, int height) {
+   if ( content_pos.x <= x && x + width <= content_pos.x + content_size.w
+        && content_pos.y <= y && y + height <= content_pos.y + content_size.h ){
         return 1;
    }
    else {
@@ -539,8 +641,13 @@ void drawCutBoxCorner(Point pos) {
     api_update(&wnd, (Rect){pos.x, pos.y, cut_box_dash_corner_height, cut_box_dash_corner_height});
 }
 
+void drawCutBoxButton(Point pos) {
+    api_paint24BitmapToContentTransparent(&wnd, cut_confirm_icon, (Point){pos.x,pos.y}, (Point){0,0}, (Size){cut_box_button_width,cut_box_button_height},(Size){cut_box_button_width,cut_box_button_height});
+    api_update(&wnd, (Rect){pos.x, pos.y, cut_box_button_height, cut_box_button_height});
+}
+
 void drawCutBox(Point pos, int width, int height) {
-    api_paint24BitmapToContent(&wnd, cut_img_save, (Point){content_pos.x - cut_box_dash_corner_height,content_pos.y - cut_box_dash_corner_height}, (Point){0,0}, (Size){content_size.h+2*cut_box_dash_corner_height, content_size.w+2*cut_box_dash_corner_height},(Size){content_size.h+2*cut_box_dash_corner_height,content_size.w+2*cut_box_dash_corner_height});
+    api_paint24BitmapToContent(&wnd, cut_img_save, (Point){content_pos.x - cut_box_dash_corner_height,content_pos.y - cut_box_dash_corner_height}, (Point){0,0}, (Size){content_size.h+2*cut_box_dash_corner_height, content_size.w+2*cut_box_dash_corner_height+2*cut_box_button_width},(Size){content_size.h+2*cut_box_dash_corner_height,content_size.w+2*cut_box_dash_corner_height+2*cut_box_button_width});
     drawCutBoxWidth(pos.y - cut_box_dash_corner_height, pos.y - cut_box_dash_height, width);
     drawCutBoxWidth(pos.y + height, pos.y + height, width);
     drawCutBoxHeight(pos.x - cut_box_dash_corner_height, pos.x - cut_box_dash_height, height);
@@ -549,6 +656,7 @@ void drawCutBox(Point pos, int width, int height) {
     drawCutBoxCorner((Point){pos.x + width, pos.y - cut_box_dash_corner_height});
     drawCutBoxCorner((Point){pos.x - cut_box_dash_corner_height, pos.y + height});
     drawCutBoxCorner((Point){pos.x + width, pos.y + height});
+    drawCutBoxButton((Point){pos.x + width + cut_box_dash_corner_height, pos.y + height + cut_box_dash_corner_height - cut_box_button_height});
 }
 
 int isMouseInCutButton(int x, int y) {
@@ -562,11 +670,11 @@ int isMouseInCutButton(int x, int y) {
             cutbox_size.h = content_size.h;
             struct RGB *t;
             struct RGB *o;
-            cut_img_save = malloc((cutbox_size.w+cut_box_dash_corner_height*2)*(cutbox_size.h+cut_box_dash_corner_height*2)*3);
-            int max_line = cutbox_size.w+cut_box_dash_corner_height*2;
+            cut_img_save = malloc((cutbox_size.w+cut_box_dash_corner_height*2)*(cutbox_size.h+cut_box_dash_corner_height*2+cut_box_button_width*2)*3);
+            int max_line = cutbox_size.w+cut_box_dash_corner_height*2+cut_box_button_width*2;
             for (int i = 0; i < cutbox_size.h+cut_box_dash_corner_height*2; i++) {
                 o = wnd.content + (cutbox_pos.y - cut_box_dash_corner_height + i) * wnd.size.w + cutbox_pos.x - cut_box_dash_corner_height;
-                t = cut_img_save + i * (cutbox_size.w+cut_box_dash_corner_height*2);
+                t = cut_img_save + i * (cutbox_size.w+cut_box_dash_corner_height*2+cut_box_button_width*2);
                 memmove(t, o, max_line * 3);
             }
             drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
@@ -685,40 +793,68 @@ void showImageInContent()
         t = image_title_origin + i * image_title_size.w;
         memmove(o, t, max_line * 3);
     }
-    int pos_y=235-image_show[image_item-1]->h/2;
-    int pos_x=390-image_show[image_item-1]->w/2;
-    api_paint24BitmapToContent(&wnd, image_show[image_item-1]->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_show[image_item-1]->h,image_show[image_item-1]->w},(Size){image_show[image_item-1]->h,image_show[image_item-1]->w});
-    api_drawString(&wnd, 140, 6, image_show[image_item-1]->image_name, image_name_color);
-    content_size=(Size){image_show[image_item-1]->h,image_show[image_item-1]->w};
-    content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
-    scale_degree=1;
-    turn_degree=0;
-    image_origin->data=image_show[image_item-1]->data;
-    image_origin->height=content_size.h;
-    image_origin->width=content_size.w;
-    image_origin_mirror->height=content_size.h;
-    image_origin_mirror->width=content_size.w;
-    image_in_content_torollover=(RGB*)malloc(sizeof(RGB)*image_origin->height*image_origin->width);
-    memmove(image_in_content_torollover, image_show[image_item-1]->data, image_origin->height*image_origin->width*3);
-    image_in_content_toturnaround=(RGB*)malloc(sizeof(RGB)*image_origin->height*image_origin->width);
-    memmove(image_in_content_toturnaround, image_show[image_item-1]->data, image_origin->height*image_origin->width*3);
+    printf(1, "%s, %d, %d, %d\n", image_show[image_item-1]->image_name, image_show[image_item-1]->w, image_show[image_item-1]->h, image_show[image_item-1]->gif_img_num);
+    if(image_show[image_item-1]->gif_img_num>1)
+    {
+        free(current_gif_img);
+        int pos_y=235-(image_show[image_item-1]->h/image_show[image_item-1]->gif_img_num)/2;
+        int pos_x=390-image_show[image_item-1]->w/2;
+        api_paint24BitmapToContent(&wnd, image_show[image_item-1]->data, (Point){pos_x,pos_y}, (Point){0,(image_show[image_item-1]->h/image_show[image_item-1]->gif_img_num)*(gif_frame-1)},(Size){image_show[image_item-1]->h,image_show[image_item-1]->w},(Size){(image_show[image_item-1]->h/image_show[image_item-1]->gif_img_num),image_show[image_item-1]->w});
+        api_drawString(&wnd, 140, 6, image_show[image_item-1]->image_name, image_name_color);
+        gif_frame = (gif_frame % image_show[image_item-1]->gif_img_num ) + 1;
+        current_gif_img = (Image*)malloc(sizeof(Image));
+        current_gif_img->data = image_show[image_item-1]->data;
+        current_gif_img->h = image_show[image_item-1]->h;
+        current_gif_img->w = image_show[image_item-1]->w;
+        current_gif_img->gif_img_num = image_show[image_item-1]->gif_img_num;
+        current_gif_img->is_onshow = 1;
+        has_content = 1;
+        content_size=(Size){(image_show[image_item-1]->h/image_show[image_item-1]->gif_img_num),image_show[image_item-1]->w};
+        content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+        scale_degree=1;
+        turn_degree=0;
+    }
+    else
+    {
+        int pos_y=235-image_show[image_item-1]->h/2;
+        int pos_x=390-image_show[image_item-1]->w/2;
+        api_paint24BitmapToContent(&wnd, image_show[image_item-1]->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_show[image_item-1]->h,image_show[image_item-1]->w},(Size){image_show[image_item-1]->h,image_show[image_item-1]->w});
+        api_drawString(&wnd, 140, 6, image_show[image_item-1]->image_name, image_name_color);
+        content_size=(Size){image_show[image_item-1]->h,image_show[image_item-1]->w};
+        content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+        scale_degree=1;
+        turn_degree=0;
+        image_origin->data=image_show[image_item-1]->data;
+        image_origin->height=content_size.h;
+        image_origin->width=content_size.w;
+        image_origin_mirror->height=content_size.h;
+        image_origin_mirror->width=content_size.w;
+        image_in_content_torollover=(RGB*)malloc(sizeof(RGB)*image_origin->height*image_origin->width);
+        memmove(image_in_content_torollover, image_show[image_item-1]->data, image_origin->height*image_origin->width*3);
+        image_in_content_toturnaround=(RGB*)malloc(sizeof(RGB)*image_origin->height*image_origin->width);
+        memmove(image_in_content_toturnaround, image_show[image_item-1]->data, image_origin->height*image_origin->width*3);
+    }
+    current_gif_img_num = image_show[image_item-1]->gif_img_num;
     api_repaint(&wnd);
 }
 
 int isMouseInListItem(int x, int y) {
    if (30 <= x && x <= 110 && 80 <= y && y <= 188){
+        has_content = 0;
         image_item = 1;
         showImageInContent();
         return 1;
    }
    else if (30 <= x && x <= 110 && 210 <= y && y <= 318)
    {
+        has_content = 0;
         image_item = 2;
         showImageInContent();
         return 1;
    }
    else if (30 <= x && x <= 110 && 340 <= y && y <= 448)
    {
+        has_content = 0;
         image_item = 3;
         showImageInContent();
         return 1;
@@ -748,6 +884,7 @@ int isMouseInDeleteButton(int x, int y) {
         content_size=(Size){410,380};
         content_pos=(Point){140,30};
         api_repaint(&wnd);
+        has_content = 0;
         return 1;
    }
    else {
@@ -757,27 +894,64 @@ int isMouseInDeleteButton(int x, int y) {
 
 void image_scale_process(float zoom_degree)
 {
-    scale_degree=scale_degree*zoom_degree;
-    image_scale->height=image_origin->height*scale_degree;
-    image_scale->width=image_origin->width*scale_degree;
-    image_in_content_scaled=(RGB*)malloc(sizeof(RGB)*image_scale->height*image_scale->width);
-    image_scale->data=image_in_content_scaled;
-    struct RGB *t;
-    struct RGB *o;
-    int max_line = edit_img_size.w;
-    for (int i = 0; i < edit_img_size.h; i++) {
-        o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
-        t = edit_img_origin + i * edit_img_size.w;
-        memmove(o, t, max_line * 3);
+    if(has_content == 1 && current_gif_img->gif_img_num > 1 && current_gif_img->is_onshow == 1)
+    {
+        has_content = 0;
+        image_origin->data=current_gif_img->data;
+        image_origin->height=current_gif_img->h;
+        image_origin->width=current_gif_img->w;
+        scale_degree=scale_degree*zoom_degree;
+        image_scale->height=image_origin->height*scale_degree;
+        image_scale->width=image_origin->width*scale_degree;
+        image_in_content_scaled=(RGB*)malloc(sizeof(RGB)*image_scale->height*image_scale->width);
+        image_scale->data=image_in_content_scaled;
+        struct RGB *t;
+        struct RGB *o;
+        int max_line = edit_img_size.w;
+        for (int i = 0; i < edit_img_size.h; i++) {
+            o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+            t = edit_img_origin + i * edit_img_size.w;
+            memmove(o, t, max_line * 3);
+        }
+        picScale(image_origin, image_scale);
+        current_gif_img->w = image_scale->width;
+        current_gif_img->h = image_scale->height;
+        current_gif_img->data = image_scale->data;
+        int pos_y=235-(current_gif_img->h/current_gif_img->gif_img_num)/2;
+        int pos_x=390-current_gif_img->w/2;
+        api_paint24BitmapToContent(&wnd, current_gif_img->data, (Point){pos_x,pos_y}, (Point){0,(current_gif_img->h/current_gif_img->gif_img_num)*(gif_frame-1)},(Size){current_gif_img->h,current_gif_img->w},(Size){(current_gif_img->h/current_gif_img->gif_img_num),current_gif_img->w});
+        gif_frame = (gif_frame % current_gif_img->gif_img_num ) + 1;
+        content_size=(Size){(current_gif_img->h/current_gif_img->gif_img_num),current_gif_img->w};
+        content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+        free(image_in_content_scaled);
+        api_repaint(&wnd);
+        has_content = 1;
+        printf(1, "yes!!\n\n\n");
     }
-    picScale(image_origin, image_scale);
-    int pos_y=235-image_scale->height/2;
-    int pos_x=390-image_scale->width/2;
-    api_paint24BitmapToContent(&wnd, image_scale->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_scale->height,image_scale->width},(Size){image_scale->height,image_scale->width});
-    content_size=(Size){image_scale->height,image_scale->width};
-    content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
-    free(image_in_content_scaled);
-    api_repaint(&wnd);
+    else
+    {
+        scale_degree=scale_degree*zoom_degree;
+        image_scale->height=image_origin->height*scale_degree;
+        image_scale->width=image_origin->width*scale_degree;
+        image_in_content_scaled=(RGB*)malloc(sizeof(RGB)*image_scale->height*image_scale->width);
+        image_scale->data=image_in_content_scaled;
+        struct RGB *t;
+        struct RGB *o;
+        int max_line = edit_img_size.w;
+        for (int i = 0; i < edit_img_size.h; i++) {
+            o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+            t = edit_img_origin + i * edit_img_size.w;
+            memmove(o, t, max_line * 3);
+        }
+        picScale(image_origin, image_scale);
+        int pos_y=235-image_scale->height/2;
+        int pos_x=390-image_scale->width/2;
+        api_paint24BitmapToContent(&wnd, image_scale->data, (Point){pos_x,pos_y}, (Point){0,0}, (Size){image_scale->height,image_scale->width},(Size){image_scale->height,image_scale->width});
+        content_size=(Size){image_scale->height,image_scale->width};
+        content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+        free(image_in_content_scaled);
+        api_repaint(&wnd);
+    }
 }
 
 int isMouseInZoominButton(int x, int y) {
@@ -1043,38 +1217,145 @@ void MsgProc(struct message * msg)
             mousePos.x = msg->params[0];
             mousePos.y = msg->params[1];
         }
+        if(isMouseInCutBoxConfirmButton(msg->params[0], msg->params[1]))
+        {
+            struct RGB *t;
+            struct RGB *o;
+            cut_img_result = malloc(cutbox_size.w*cutbox_size.h*3);
+            int max_line = cutbox_size.w;
+            for (int i = 0; i < cutbox_size.h; i++) {
+                o = wnd.content + (cutbox_pos.y + i) * wnd.size.w + cutbox_pos.x;
+                t = cut_img_result + i * cutbox_size.w;
+                memmove(t, o, max_line * 3);
+            }
+            max_line = edit_img_size.w;
+            for (int i = 0; i < edit_img_size.h; i++) {
+                o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+                t = edit_img_origin + i * edit_img_size.w;
+                memmove(o, t, max_line * 3);
+            }
+            content_size=(Size){cutbox_size.h,cutbox_size.w};
+            content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
+            int pos_y=235-content_size.h/2;
+            int pos_x=390-content_size.w/2;
+            api_paint24BitmapToContent(&wnd, cut_img_result, (Point){pos_x,pos_y}, (Point){0,0}, (Size){content_size.h,content_size.w},(Size){content_size.h,content_size.w});
+            api_repaint(&wnd);
+        }
         break;
     case M_MOUSE_MOVE:
+<<<<<<< HEAD
 
         if(mouse_down == 1 && is_cut==1 && isMouseInCutBox(cutbox_pos.x, cutbox_pos.y)) {
+=======
+        if(mouse_down == 1 && is_cut==1 && isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h)) {
+>>>>>>> 4d482c2d3229ffa65322fcfa75f33a8c5b703448
             lastMousePos.x = mousePos.x;
             lastMousePos.y = mousePos.y;
             mousePos.x = msg->params[0];
             mousePos.y = msg->params[1];
             int dx = mousePos.x - lastMousePos.x;
             int dy = mousePos.y - lastMousePos.y;
-            cutbox_pos.x = cutbox_pos.x + dx;
             printf(1, "mousePos, %d, %d\n", mousePos.x, mousePos.y);
-            if(isMouseInCutBox(cutbox_pos.x, cutbox_pos.y))
+            if(dx < 5 && dx > -5 && dy < 5 && dy > -5)
             {
-                // cutbox_pos.y = cutbox_pos.y + dy;
                 if(isMouseInCutBoxLeft(lastMousePos.x, lastMousePos.y))
                 {
-                    cutbox_size.w = cutbox_size.w - dx;
-                    drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                    printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isMouseInCutBox(cutbox_pos.x, cutbox_pos.y));
+                    if(isCutBoxInContent(cutbox_pos.x + dx, cutbox_pos.y, cutbox_size.w - dx, cutbox_size.h))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_pos.x = cutbox_pos.x + dx;
+                        cutbox_size.w = cutbox_size.w - dx;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
                 }
-                if(isMouseInCutBoxRight(msg->params[0], msg->params[1]))
+                else if(isMouseInCutBoxRight(lastMousePos.x, lastMousePos.y))
                 {
-                    cutbox_pos.x = cutbox_pos.x - dx;
-                    cutbox_size.w = cutbox_size.w + dx;
-                    drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                    if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w + dx, cutbox_size.h))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_size.w = cutbox_size.w + dx;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
                 }
-                api_repaint(&wnd);
-            }
-            else
-            {
-                cutbox_pos.x = cutbox_pos.x - dx;
+                else if(isMouseInCutBoxUp(lastMousePos.x, lastMousePos.y))
+                {
+                    if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y + dy, cutbox_size.w, cutbox_size.h - dy))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_pos.y = cutbox_pos.y + dy;
+                        cutbox_size.h = cutbox_size.h - dy;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
+                }
+                else if(isMouseInCutBoxDown(lastMousePos.x, lastMousePos.y))
+                {
+                    if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h + dy))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_size.h = cutbox_size.h + dy;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
+                }
+                else if(isMouseInCutBoxUpLeft(lastMousePos.x, lastMousePos.y))
+                {
+                    if(isCutBoxInContent(cutbox_pos.x + dx, cutbox_pos.y + dy, cutbox_size.w - dx, cutbox_size.h - dy))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_pos.x = cutbox_pos.x + dx;
+                        cutbox_pos.y = cutbox_pos.y + dy;
+                        cutbox_size.w = cutbox_size.w - dx;
+                        cutbox_size.h = cutbox_size.h - dy;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
+                }
+                else if(isMouseInCutBoxUpRight(lastMousePos.x, lastMousePos.y))
+                {
+                    if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y + dy, cutbox_size.w + dx, cutbox_size.h - dy))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_pos.y = cutbox_pos.y + dy;
+                        cutbox_size.w = cutbox_size.w + dx;
+                        cutbox_size.h = cutbox_size.h - dy;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
+                }
+                else if(isMouseInCutBoxDownLeft(lastMousePos.x, lastMousePos.y))
+                {
+                    if(isCutBoxInContent(cutbox_pos.x + dx, cutbox_pos.y, cutbox_size.w - dx, cutbox_size.h + dy))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_pos.x = cutbox_pos.x + dx;
+                        cutbox_size.w = cutbox_size.w - dx;
+                        cutbox_size.h = cutbox_size.h + dy;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
+                }
+                else if(isMouseInCutBoxDownRight(lastMousePos.x, lastMousePos.y))
+                {
+                    if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w + dx, cutbox_size.h + dy))
+                    {
+                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
+                        cutbox_size.w = cutbox_size.w + dx;
+                        cutbox_size.h = cutbox_size.h + dy;
+                        drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
+                        api_repaint(&wnd);
+                    }
+                }
             }
             // cutbox_size.h = cutbox_size.h - dy;
         }
@@ -1087,6 +1368,26 @@ void MsgProc(struct message * msg)
         break;
     case M_MOUSE_UP:
         mouse_down = 0;
+        break;
+    case M_TIMER:
+        if(has_content == 1 && current_gif_img->gif_img_num > 1 && current_gif_img->is_onshow == 1)
+        {
+            struct RGB *t;
+            struct RGB *o;
+            int max_line = edit_img_size.w;
+            for (int i = 0; i < edit_img_size.h; i++) {
+                o = wnd.content + (edit_img_pos.y + i) * wnd.size.w + edit_img_pos.x;
+                t = edit_img_origin + i * edit_img_size.w;
+                memmove(o, t, max_line * 3);
+            }
+            int pos_y=235-(current_gif_img->h/current_gif_img->gif_img_num)/2;
+            int pos_x=390-current_gif_img->w/2;
+            api_paint24BitmapToContent(&wnd, current_gif_img->data, (Point){pos_x,pos_y}, (Point){0,(current_gif_img->h / current_gif_img->gif_img_num)*(gif_frame-1)},(Size){current_gif_img->h,current_gif_img->w},(Size){(current_gif_img->h / current_gif_img->gif_img_num),current_gif_img->w});
+            gif_frame = (gif_frame % current_gif_img->gif_img_num ) + 1;
+            printf(1, "gif_frame, %d\n", gif_frame);
+            api_repaint(&wnd);
+            // api_update(&wnd, (Rect){pos_x, pos_y, (current_gif_img->h / current_gif_img->gif_img_num), current_gif_img->w});
+        }
         break;
     case M_CLOSE_WINDOW:
         // printf(1, save_icon);
@@ -1112,6 +1413,8 @@ void MsgProc(struct message * msg)
         free(edit_img_origin);
         free(image_title_origin);
         free(image_list_origin);
+        free(cut_confirm_icon);
+        free(cut_cancel_icon);
         api_destroywindow(&wnd);
         break;
     }
@@ -1149,6 +1452,8 @@ main(int argc, char *argv[])
     bmp_icon = malloc(80*80*3);
     rollover_icon = malloc(60*60*3);
     turnaround_icon = malloc(60*60*3);
+    cut_confirm_icon = malloc(cut_box_button_width*cut_box_button_height*3);
+    cut_cancel_icon = malloc(cut_box_button_width*cut_box_button_height*3);
     edit_img_test = malloc(edit_img_size.w*edit_img_size.h*3);
     
     api_createwindow(&wnd);
@@ -1174,6 +1479,7 @@ main(int argc, char *argv[])
     read24BitmapFile(bmp_filename, bmp_icon, &h, &w);
     read24BitmapFile(rollover_filename, rollover_icon, &h, &w);
     read24BitmapFile(turnaround_filename, turnaround_icon, &h, &w);
+    read24BitmapFile(cut_confirm_filename, cut_confirm_icon, &h, &w);
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
@@ -1244,8 +1550,10 @@ main(int argc, char *argv[])
     image_show[1] = header->next;
     image_show[2] = header->next->next;
     setImageList();
+    current_gif_img = (Image*)malloc(sizeof(Image));
 
     api_repaint(&wnd);
+    api_settimer(&wnd, 50);
     api_exec(&wnd, &MsgProc);
     return 0;
 }
