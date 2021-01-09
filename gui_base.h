@@ -22,11 +22,12 @@ typedef struct RGB {
 
 // 32 bit RGBA. used above GUI Utility
 typedef struct RGBA {
-    unsigned char A;
     unsigned char B;
     unsigned char G;
     unsigned char R;
+    unsigned char A;
 } RGBA;
+
 
 typedef struct Rect {
     int x;
@@ -72,7 +73,11 @@ typedef struct Image
 	struct Image* prev;
 	struct Image* next;
 }Image;
-
+typedef struct GIF {
+    long frame_num;
+    long width, height;
+    RGB * data;
+} GIF;
 typedef struct ImageList
 {
 	struct Image* head;
