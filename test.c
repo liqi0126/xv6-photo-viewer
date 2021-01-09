@@ -20,10 +20,12 @@
 #include "gui_base.h"
 #include "gui_api.h"
 
+#include "loader.h"
+#include "saver.h"
 
 Window wnd;
 
-RGB* save_icon;
+PBitmap save_icon;
 RGB* delete_icon;
 RGB* cut_icon;
 RGB* pen_icon;
@@ -1390,7 +1392,7 @@ void MsgProc(struct message * msg)
     case M_CLOSE_WINDOW:
         // printf(1, save_icon);
         printf(1, "USER_CLOSE\n");
-        free(save_icon);
+        free(save_icon.data);
         free(delete_icon);
         free(cut_icon);
         free(pen_icon);
@@ -1430,7 +1432,7 @@ main(int argc, char *argv[])
     wnd.title = "PhotoViewer";
     
     int h,w;
-    save_icon = malloc(30*30*3);
+    // save_icon = malloc(30*30*3);
     delete_icon = malloc(30*30*3);
     cut_icon = malloc(30*30*3);
     pen_icon = malloc(30*30*3);
@@ -1457,8 +1459,8 @@ main(int argc, char *argv[])
     api_createwindow(&wnd);
     
 
-    // save_icon = LoadImg(save_filename);
-    read24BitmapFile(save_filename, save_icon, &h, &w);
+    save_icon = LoadImg(save_filename);
+    // read24BitmapFile(save_filename, save_icon, &h, &w);
     printf(1, "Icon %d, %d", h, w);
     read24BitmapFile(delete_filename, delete_icon,&h,&w);
     read24BitmapFile(cut_filename, cut_icon, &h, &w);
@@ -1483,7 +1485,7 @@ main(int argc, char *argv[])
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
-    api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, delete_icon, (Point){30,0},(Size){30,30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);

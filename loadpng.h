@@ -20,9 +20,13 @@ freely, subject to the following restrictions:
 #ifndef LODEPNG_H
 #define LODEPNG_H
 
+#include "types.h"
+#include "fcntl.h"
+#include "stat.h"
 #define NULL 0
 
-typedef unsigned int size_t;
+typedef int size_t;
+
 
 extern const char* LODEPNG_VERSION_STRING;
 
