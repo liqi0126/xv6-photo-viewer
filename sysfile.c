@@ -110,8 +110,9 @@ int sys_lseek(void) {
 
 	if (base == SEEK_END)
 		newoff = f->ip->size + offset;
-	if (newoff < f->ip->size)
-		return -1;
+
+	// if (newoff < f->ip->size)
+	// 	return -1;
 
 	if (newoff > f->ip->size){
 		zerosize = newoff - f->ip->size;

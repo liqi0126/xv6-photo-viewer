@@ -23,8 +23,6 @@ void Frame(void *data, struct GIF_WHDR *whdr) {
     uint8_t head[18] = {0};
     STAT *stat = (STAT*)data;
 
-    printf(1, "%d/%d\n", whdr->ifrm, whdr->nfrm);
-
     #define BGRA(i) ((whdr->bptr[i] == whdr->tran)? 0 : \
           ((uint32_t)(whdr->cpal[whdr->bptr[i]].R << ((GIF_BIGE)? 8 : 16)) \
          | (uint32_t)(whdr->cpal[whdr->bptr[i]].G << ((GIF_BIGE)? 16 : 8)) \
@@ -94,18 +92,20 @@ GIF read_gif(char * filename) {
     if ((stat.uuid = open(filename, O_RDONLY | O_BINARY)) <= 0)
         return gif;
     stat.size = (unsigned long)lseek(stat.uuid, 0UL, 2 /** SEEK_END **/);
-    lseek(stat.uuid, 0UL, 0 /** SEEK_SET **/);
-    read(stat.uuid, stat.data = realloc(0, stat.size), stat.size);
+    int current_pos = lseek(stat.uuid, 0UL, 0 /** SEEK_SET **/);
+    stat.data = malloc(stat.size);
+    read(stat.uuid, stat.data, stat.size);
     close(stat.uuid);
     // unlink(argv[argc - 1]);
     GIF_Load(stat.data, (long)stat.size, Frame, 0, (void*)&stat, 0L);
-    stat.pict = realloc(stat.pict, 0L);
-    stat.prev = realloc(stat.prev, 0L);
-    stat.data = realloc(stat.data, 0L);
+    free(stat.pict);
+    free(stat.prev);
+    free(stat.data);
 
     gif.data = stat.results;
     gif.frame_num = stat.nfrm;
     gif.height = stat.xdim;
     gif.width = stat.ydim;
     return gif;
+
 }
