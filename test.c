@@ -162,7 +162,13 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
     append_image->image_size=size;
     append_image->data=(RGB*)malloc(sizeof(RGB)*append_image->image_size);
     int h,w;
-    read24BitmapFile(append_image->image_name, append_image->data, &h, &w);
+    printf(1, append_image->image_name);
+    printf(1, "here\n");
+    // read24BitmapFile(append_image->image_name, append_image->data, &h, &w);
+    PBitmap bmp=LoadImg(append_image->image_name);
+    h=bmp.height;
+    w=bmp.width;
+    append_image->data=bmp.data;
     append_image->h=h;
     append_image->w=w;
     if(strcmp(append_image->image_name, "enemy_big.bmp")==0 || strcmp(append_image->image_name, "enemy_middle.bmp")==0 || strcmp(append_image->image_name, "enemy_small.bmp")==0)
