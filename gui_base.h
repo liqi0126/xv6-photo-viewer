@@ -92,6 +92,7 @@ void drawPointAlpha(struct RGB* , struct RGBA);
 void drawCharacter(struct RGB *, struct Point, struct Size, char, struct RGBA);
 void drawString(struct RGB *, struct Point, struct Size, char *, struct RGBA);
 void drawRect(struct RGB *, struct Point, struct Size, struct RGB, struct Size);
+void drawBorder(RGB* buf, Point p, Size s, RGB color, Size rect_size, int border);
 void drawBitmap(struct RGB* , struct RGB* , struct Point, struct Point, struct Size, struct Size, struct Size);
 void drawTransparentBitmap(struct RGB*, struct RGB*, struct Point, struct Point, struct Size, struct Size, struct Size);
 void copyContent(struct RGB*, struct RGB*, struct Point, struct Size, struct Size);

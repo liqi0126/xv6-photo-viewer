@@ -85,6 +85,19 @@ int api_drawString(Window *wnd, int x, int y, char *str, RGBA color) {
     return 0;
 }
 
+int api_drawUnpressedButton(Window* wnd, struct RGB* img, Point pWnd, Point pBmp, Size sBmp, Size s)
+{
+    int borderWidth = 3;
+    RGB borderColor;
+    borderColor.R = 0;
+    borderColor.G = 0;
+    borderColor.B = 0;
+
+    drawBitmap(wnd->content, img, pWnd, pBmp, wnd->size, sBmp, s);
+    drawBorder(wnd->content, pWnd, wnd->size, borderColor, s, borderWidth);
+    return 0;
+}
+
 int api_drawButton(Window *wnd, Point p, Size s, char * str)
 {
     RGB bColor;
