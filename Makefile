@@ -143,7 +143,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o image_utils.o loader.o loadpng.o loadjpeg.o saver.o
+ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o image_utils.o loader.o loadpng.o loadjpeg.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -234,8 +234,8 @@ IMGS=desktop.bmp\
 	 rollover-w11.bmp\
 	 giphy_small.bmp\
 	 ok-w3.bmp\
-	 jpeg.jpeg\
-	 png.png\
+	#  jpeg.jpeg\
+	#  png.png\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)
