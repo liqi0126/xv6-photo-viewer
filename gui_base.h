@@ -62,6 +62,7 @@ typedef struct Image
     int gif_img_num;
     int is_onshow;
     struct RGB* data;
+    struct RGB* gif_preview;
     int scale_needed;
     struct RGB* scale_data;
     int h;

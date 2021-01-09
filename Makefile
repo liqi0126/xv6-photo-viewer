@@ -191,9 +191,12 @@ UPROGS=\
 IMGS=desktop.bmp\
      clock.bmp\
      editor.bmp\
-     test.bmp\
+	 test.bmp\
      plane.bmp\
      painter.bmp\
+     test_t.bmp\
+     plane_t.bmp\
+     painter_t.bmp\
      background.bmp\
      bullet1.bmp\
      enemy_big.bmp\
@@ -232,8 +235,9 @@ IMGS=desktop.bmp\
      separator.bmp\
 	 turnaround-w5.bmp\
 	 rollover-w11.bmp\
-	 giphy_small.bmp\
+	 giphy_small_t.bmp\
 	 ok-w3.bmp\
+	 no-w3.bmp\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)
