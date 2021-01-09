@@ -10,6 +10,8 @@
 #include "image_utils.h"
 
 #define PI 3.1415926536
+#define MOUSE_SPEED_X 0.6f
+#define MOUSE_SPEED_Y -0.6f
 
 //define the xv6 param
 #include "gui_base.h"
@@ -41,6 +43,7 @@ RGB* turnaround_icon;
 RGB* edit_img;
 RGB* edit_img_test;
 RGB* edit_img_origin;
+RGB* cut_img_save;
 RGB* image_list_origin;
 RGB* image_title_origin;
 RGB* image_in_content;
@@ -83,6 +86,7 @@ char turnaround_filename[] = "turnaround-w5.bmp";
 char filename[] = "testtest.bmp";
 
 RGB pencil_color={0,0,255};
+RGB cut_box_color={9,9,10};
 Size edit_img_size={410,500};
 Point edit_img_pos={140,30};
 Size image_list_size={465,140};
@@ -90,11 +94,20 @@ Point image_list_pos={0,80};
 Size image_title_size={18,200};
 Point image_title_pos={140,6};
 Size content_size={410,500};
+Size cutbox_size={410,500};
 Point content_pos={140,30};
+Point cutbox_pos={140,30};
+Point lastMousePos = {0, 0};
+Point mousePos = {0, 0};
 const int pointSize = 5;
+const int cut_box_dash_width = 6;
+const int cut_box_dash_corner_width = 10;
+const int cut_box_dash_height = 2;
+const int cut_box_dash_corner_height = 5;
 int mouse_down = 0;
 int is_pencil = 0;
 int is_rubber = 0;
+int is_cut = 0;
 int is_file = 0;
 int image_item = 0;
 float scale_degree = 1;
@@ -308,12 +321,43 @@ ls_new(char *path)
           char tem[DIRSIZ+1];
           memmove(tem, filetype, strlen(filetype));
           printf(1, "%s %d %d %d %s\n", filename, st.type, st.ino, st.size, tem);
+          // adjust image size here
           if(st.size<1000000) ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
       }
     }
     break;
   }
   close(fd);
+}
+
+int isMouseInCutBoxLeft(int x, int y) {
+   if (cutbox_pos.x-cut_box_dash_corner_width <= x && x <= cutbox_pos.x 
+        && cutbox_pos.y <= y && y <= cutbox_pos.y + cutbox_size.h ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBoxRight(int x, int y) {
+   if (cutbox_pos.x + cutbox_size.w <= x && x <= cutbox_pos.x + cutbox_size.w + cut_box_dash_corner_width 
+        && cutbox_pos.y <= y && y <= cutbox_pos.y + cutbox_size.h ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInCutBox(int x, int y) {
+   if ( content_pos.x <= x && x <= content_pos.x + content_size.w
+        && content_pos.y <= y && y <= content_pos.y + content_size.h ){
+        return 1;
+   }
+   else {
+        return 0;
+   }
 }
 
 int isMouseInContent(int x, int y) {
@@ -432,13 +476,100 @@ int isMouseInSaveButton(int x, int y) {
    }
 }
 
+void drawCutBoxWidth(int y_corner, int y_dash, int width) {
+    api_drawRect(&wnd, (Point) {cutbox_pos.x, y_corner}, (Size) {cut_box_dash_corner_height, cut_box_dash_corner_width}, cut_box_color);
+    api_update(&wnd, (Rect){cutbox_pos.x, y_corner, cut_box_dash_corner_width, cut_box_dash_corner_height});
+    int image_width = width - cut_box_dash_corner_width*2 - cut_box_dash_width*2;
+    if(image_width > 0)
+    {
+        int cut_box_width = image_width / cut_box_dash_width;
+        for(int i=0;i<cut_box_width;i++)
+        {
+            if(i%2==0)
+            {
+                api_drawRect(&wnd, (Point) {cutbox_pos.x+cut_box_dash_corner_width+cut_box_dash_width+i*cut_box_dash_width, y_dash}, (Size) {cut_box_dash_height, cut_box_dash_width}, cut_box_color);
+                api_update(&wnd, (Rect){cutbox_pos.x+cut_box_dash_corner_width+cut_box_dash_width+i*cut_box_dash_width, y_dash, cut_box_dash_width, cut_box_dash_height});
+            }
+        }
+        if(cut_box_width%2==0)
+        {
+            api_drawRect(&wnd, (Point) {cutbox_pos.x +cut_box_dash_corner_width+cut_box_dash_width+ cut_box_width*cut_box_dash_width, y_dash}, (Size) {cut_box_dash_height, image_width - cut_box_width*cut_box_dash_width}, cut_box_color);
+            api_update(&wnd, (Rect){cutbox_pos.x+cut_box_dash_corner_width+cut_box_dash_width+cut_box_width*cut_box_dash_width, y_dash, image_width - cut_box_width*cut_box_dash_width, cut_box_dash_height});
+        }
+    }
+    api_drawRect(&wnd, (Point) {cutbox_pos.x+image_width+cut_box_dash_width*2+cut_box_dash_corner_width, y_corner}, (Size) {cut_box_dash_corner_height, cut_box_dash_corner_width}, cut_box_color);
+    api_update(&wnd, (Rect){cutbox_pos.x+image_width+cut_box_dash_width*2+cut_box_dash_corner_width, y_corner, cut_box_dash_corner_width, cut_box_dash_corner_height});
+}
+
+void drawCutBoxHeight(int x_corner, int x_dash, int height) {
+    api_drawRect(&wnd, (Point) {x_corner, cutbox_pos.y}, (Size) {cut_box_dash_corner_width, cut_box_dash_corner_height}, cut_box_color);
+    api_update(&wnd, (Rect){x_corner, cutbox_pos.y, cut_box_dash_corner_height, cut_box_dash_corner_width});
+    int image_height = height - cut_box_dash_corner_width*2 - cut_box_dash_width*2;
+    if(image_height > 0)
+    {
+        int cut_box_width = image_height / cut_box_dash_width;
+        for(int i=0;i<cut_box_width;i++)
+        {
+            if(i%2==0)
+            {
+                api_drawRect(&wnd, (Point) {x_dash, cutbox_pos.y+cut_box_dash_corner_width+cut_box_dash_width+i*cut_box_dash_width}, (Size) {cut_box_dash_width, cut_box_dash_height}, cut_box_color);
+                api_update(&wnd, (Rect){x_dash, cutbox_pos.y+cut_box_dash_corner_width+cut_box_dash_width+i*cut_box_dash_width, cut_box_dash_height, cut_box_dash_width});
+            }
+        }
+        if(cut_box_width%2==0)
+        {
+            api_drawRect(&wnd, (Point) {x_dash, cutbox_pos.y+cut_box_dash_corner_width+cut_box_dash_width+cut_box_width*cut_box_dash_width}, (Size) {image_height - cut_box_width*cut_box_dash_width, cut_box_dash_height}, cut_box_color);
+            api_update(&wnd, (Rect){x_dash, cutbox_pos.y+cut_box_dash_corner_width+cut_box_dash_width+cut_box_width*cut_box_dash_width, cut_box_dash_height, image_height - cut_box_width*cut_box_dash_width});
+        }
+    }
+    api_drawRect(&wnd, (Point) {x_corner, cutbox_pos.y+image_height+cut_box_dash_width*2+cut_box_dash_corner_width}, (Size) {cut_box_dash_corner_width, cut_box_dash_corner_height}, cut_box_color);
+    api_update(&wnd, (Rect){x_corner, cutbox_pos.y+image_height+cut_box_dash_width*2+cut_box_dash_corner_width, cut_box_dash_corner_height, cut_box_dash_corner_width});
+}
+
+void drawCutBoxCorner(Point pos) {
+    api_drawRect(&wnd, pos, (Size) {cut_box_dash_corner_height, cut_box_dash_corner_height}, cut_box_color);
+    api_update(&wnd, (Rect){pos.x, pos.y, cut_box_dash_corner_height, cut_box_dash_corner_height});
+}
+
+void drawCutBox(Point pos, int width, int height) {
+    api_paint24BitmapToContent(&wnd, cut_img_save, (Point){content_pos.x - cut_box_dash_corner_height,content_pos.y - cut_box_dash_corner_height}, (Point){0,0}, (Size){content_size.h+2*cut_box_dash_corner_height, content_size.w+2*cut_box_dash_corner_height},(Size){content_size.h+2*cut_box_dash_corner_height,content_size.w+2*cut_box_dash_corner_height});
+    drawCutBoxWidth(pos.y - cut_box_dash_corner_height, pos.y - cut_box_dash_height, width);
+    drawCutBoxWidth(pos.y + height, pos.y + height, width);
+    drawCutBoxHeight(pos.x - cut_box_dash_corner_height, pos.x - cut_box_dash_height, height);
+    drawCutBoxHeight(pos.x + width, pos.x + width, height);
+    drawCutBoxCorner((Point){pos.x - cut_box_dash_corner_height, pos.y - cut_box_dash_corner_height});
+    drawCutBoxCorner((Point){pos.x + width, pos.y - cut_box_dash_corner_height});
+    drawCutBoxCorner((Point){pos.x - cut_box_dash_corner_height, pos.y + height});
+    drawCutBoxCorner((Point){pos.x + width, pos.y + height});
+}
+
 int isMouseInCutButton(int x, int y) {
-   if (60 < x && x <= 90 && 0 <= y && y <= 30){
+    if (60 < x && x <= 90 && 0 <= y && y <= 30){
+        if(is_cut == 0) 
+        {
+            is_cut = 1;
+            cutbox_pos.x = content_pos.x;
+            cutbox_pos.y = content_pos.y;
+            cutbox_size.w = content_size.w;
+            cutbox_size.h = content_size.h;
+            struct RGB *t;
+            struct RGB *o;
+            cut_img_save = malloc((cutbox_size.w+cut_box_dash_corner_height*2)*(cutbox_size.h+cut_box_dash_corner_height*2)*3);
+            int max_line = cutbox_size.w+cut_box_dash_corner_height*2;
+            for (int i = 0; i < cutbox_size.h+cut_box_dash_corner_height*2; i++) {
+                o = wnd.content + (cutbox_pos.y - cut_box_dash_corner_height + i) * wnd.size.w + cutbox_pos.x - cut_box_dash_corner_height;
+                t = cut_img_save + i * (cutbox_size.w+cut_box_dash_corner_height*2);
+                memmove(t, o, max_line * 3);
+            }
+            drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+            // api_paint24BitmapToContent(&wnd, cut_img_save, (Point){cutbox_pos.x - cut_box_dash_corner_height,cutbox_pos.y - cut_box_dash_corner_height}, (Point){0,0}, (Size){cutbox_size.h+2*cut_box_dash_corner_height,cutbox_size.w+2*cut_box_dash_corner_height},(Size){cutbox_size.h+2*cut_box_dash_corner_height,cutbox_size.w+2*cut_box_dash_corner_height});
+            // api_repaint(&wnd);
+        }
         return 1;
-   }
-   else {
+    }
+    else {
         return 0;
-   }
+    }
 }
 
 void setImageList()
@@ -864,6 +995,10 @@ void MsgProc(struct message * msg)
         {
             break;
         }
+        if(isMouseInCutButton(msg->params[0], msg->params[1]))
+        {
+            break;
+        }
         if(mouse_down == 0 && (is_pencil==1 ||  is_rubber == 1) && isMouseInContent(msg->params[0], msg->params[1]))
         {
             mouse_down = 1;
@@ -872,8 +1007,46 @@ void MsgProc(struct message * msg)
             api_update(&wnd, (Rect){msg->params[0] - pointSize / 2, msg->params[1] - pointSize /2, pointSize, pointSize});
             is_pencil=1;
         }
+        if(mouse_down == 0 && is_cut==1 && (isMouseInCutBoxLeft(msg->params[0], msg->params[1]) || isMouseInCutBoxRight(msg->params[0], msg->params[1])))
+        {
+            mouse_down = 1;
+            mousePos.x = msg->params[0];
+            mousePos.y = msg->params[1];
+        }
         break;
     case M_MOUSE_MOVE:
+        if(mouse_down == 1 && is_cut==1 && isMouseInCutBox(cutbox_pos.x, cutbox_pos.y)) {
+            lastMousePos.x = mousePos.x;
+            lastMousePos.y = mousePos.y;
+            mousePos.x = msg->params[0];
+            mousePos.y = msg->params[1];
+            int dx = mousePos.x - lastMousePos.x;
+            int dy = mousePos.y - lastMousePos.y;
+            cutbox_pos.x = cutbox_pos.x + dx;
+            printf(1, "mousePos, %d, %d\n", mousePos.x, mousePos.y);
+            if(isMouseInCutBox(cutbox_pos.x, cutbox_pos.y))
+            {
+                // cutbox_pos.y = cutbox_pos.y + dy;
+                if(isMouseInCutBoxLeft(lastMousePos.x, lastMousePos.y))
+                {
+                    cutbox_size.w = cutbox_size.w - dx;
+                    drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                    printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isMouseInCutBox(cutbox_pos.x, cutbox_pos.y));
+                }
+                if(isMouseInCutBoxRight(msg->params[0], msg->params[1]))
+                {
+                    cutbox_pos.x = cutbox_pos.x - dx;
+                    cutbox_size.w = cutbox_size.w + dx;
+                    drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
+                }
+                api_repaint(&wnd);
+            }
+            else
+            {
+                cutbox_pos.x = cutbox_pos.x - dx;
+            }
+            // cutbox_size.h = cutbox_size.h - dy;
+        }
         if(mouse_down == 1 && (is_pencil==1 ||  is_rubber == 1) && isMouseInContent(msg->params[0], msg->params[1]))
         {
             api_drawRect(&wnd, (Point) {msg->params[0] - pointSize / 2, msg->params[1] - pointSize / 2},
