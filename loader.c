@@ -28,7 +28,7 @@ PBitmap LoadBmp(char* filename){
     
     bmp.width = infoHeader.biWidth;
     bmp.height = infoHeader.biHeight;
-    bmp.data = (PColor*)malloc(bmp.width * bmp.height * sizeof(PColor));
+    bmp.data = (RGB*)malloc(bmp.width * bmp.height * sizeof(RGB));
     
     int count = infoHeader.biBitCount;
     int length = (((bmp.width * count) + 31) >> 5) << 2;
@@ -86,7 +86,7 @@ PBitmap LoadJpeg(char* filename){
     bmp.width = GetWidth(ctx);
     bmp.height = GetHeight(ctx);
     int n = bmp.width * bmp.height;
-    bmp.data = (PColor*)malloc(n * sizeof(PColor));
+    bmp.data = (RGB*)malloc(n * sizeof(RGB));
     for(int i=0; i<imgsize; i+=3){
         bmp.data[i/3].R = c[i];
         bmp.data[i/3].G = c[i+1];
@@ -106,7 +106,7 @@ PBitmap LoadPng(char* filename){
 
     // int imgsize = width * height;
     int n = bmp.width * bmp.height;
-    bmp.data = (PColor *)malloc(sizeof(PColor) * n);
+    bmp.data = (RGB *)malloc(sizeof(RGB) * n);
     //这里是用decode24,所以是3个3个的读取
     for (int i = 0; i < n; i += 1)
     {

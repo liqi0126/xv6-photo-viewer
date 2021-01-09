@@ -101,7 +101,7 @@ int rgbToPngFile(const char *pFileName, PBitmap* bmp){
     int  nHeight = bmp->h;
     uint size = nWidth * nHeight;
     char* data =(char*)malloc(sizeof(uchar)*nWidth*nHeight*FORMAT_RGB);
-    PColor* rgb = bmp->data;
+    RGB* rgb = bmp->data;
     for(int i=0; i<size; ++i){
         uchar r = rgb[i].b;
         rgb[i].b = rgb[i].r;
