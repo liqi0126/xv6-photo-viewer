@@ -8,10 +8,8 @@
 #ifndef saver_h
 #define saver_h
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "Object.h"
+
+#include "gui_base.h"
 
 typedef unsigned char      BYTE;
 typedef unsigned short  WORD;

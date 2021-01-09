@@ -1,8 +1,7 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#include "Object.h"
-#include <unistd.h>
+#include "gui_base.h"
 
 enum imgType{
     JPG,

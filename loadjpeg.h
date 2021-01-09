@@ -1,13 +1,10 @@
-#ifndef JPEGDECODE_H
-#define JPEGDECODE_H
+#ifndef LOADJPEG_H
+#define LOADJPEG_H
 
 #define MAX_JPEG_SIZE 1000000
 #define ERROR_RETURN(err) do{ctx->result = err; return;}while(0);
 
 #include "types.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 enum  DecodeResult{
     OK,             //normally decode

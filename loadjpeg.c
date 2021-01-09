@@ -1,4 +1,4 @@
-#include "JPEGDecode.h"
+#include "loadjpeg.h"
 
 uchar* GetImage(Context* ctx){
     return (ctx->compNum == 1) ? ctx->comp[0].pixels : ctx->rgb;

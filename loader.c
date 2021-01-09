@@ -1,6 +1,6 @@
-#include "Loader.h"
+#include "loader.h"
 #include "fcntl.h"
-#include "JPEGDecode.h"
+#include "loadjpeg.h"
 #include "lodepng.h"
 
 int type(char* filename){
