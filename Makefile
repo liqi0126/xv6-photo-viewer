@@ -234,6 +234,8 @@ IMGS=desktop.bmp\
 	 rollover-w11.bmp\
 	 giphy_small.bmp\
 	 ok-w3.bmp\
+	 jepg.jpeg\
+	 png.png\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)
