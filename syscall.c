@@ -98,6 +98,7 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
+extern int sys_lseek(void);
 extern int sys_createwindow(void);
 extern int sys_repaintwindow(void);
 extern int sys_getmessage(void);
@@ -126,6 +127,7 @@ static int (*syscalls[])(void) = {
 [SYS_unlink]  sys_unlink,
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
+[SYS_lseek]   sys_lseek,
 [SYS_close]   sys_close,
 [SYS_createwindow]   sys_createwindow,
 [SYS_repaintwindow]   sys_repaintwindow,
