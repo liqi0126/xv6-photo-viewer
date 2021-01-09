@@ -23,6 +23,8 @@ void Frame(void *data, struct GIF_WHDR *whdr) {
     uint8_t head[18] = {0};
     STAT *stat = (STAT*)data;
 
+    printf(1, "%d/%d\n", whdr->ifrm, whdr->nfrm);
+
     #define BGRA(i) ((whdr->bptr[i] == whdr->tran)? 0 : \
           ((uint32_t)(whdr->cpal[whdr->bptr[i]].R << ((GIF_BIGE)? 8 : 16)) \
          | (uint32_t)(whdr->cpal[whdr->bptr[i]].G << ((GIF_BIGE)? 16 : 8)) \
@@ -99,8 +101,6 @@ GIF read_gif(char * filename) {
     GIF_Load(stat.data, (long)stat.size, Frame, 0, (void*)&stat, 0L);
     stat.pict = realloc(stat.pict, 0L);
     stat.prev = realloc(stat.prev, 0L);
-    close(stat.uuid);
-    stat.uuid = 0;
     stat.data = realloc(stat.data, 0L);
 
     gif.data = stat.results;

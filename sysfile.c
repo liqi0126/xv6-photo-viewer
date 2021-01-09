@@ -127,7 +127,7 @@ int sys_lseek(void) {
 	}
 
 	f->off = newoff;
-	return 0;
+	return f->off;
 }
 
 int

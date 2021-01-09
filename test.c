@@ -8,6 +8,7 @@
 #include "fs.h"
 #include "stat.h"
 #include "image_utils.h"
+#include "loadgif.h"
 
 // #include "loader.h"
 // #include "saver.h"
@@ -1456,6 +1457,9 @@ main(int argc, char *argv[])
     
     api_createwindow(&wnd);
     
+    GIF gif = read_gif("giphy_small.gif");
+    printf(1, "gif:");
+    printf(1, "%d %d %d\n", gif.height, gif.width, gif.frame_num);
 
     // save_icon = LoadImg(save_filename);
     read24BitmapFile(save_filename, save_icon, &h, &w);

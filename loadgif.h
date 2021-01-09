@@ -29,11 +29,14 @@
     _________________________________________________________________________
 **/
 
+#define uint8_t unsigned char
+#define uint16_t unsigned short
+#define uint32_t unsigned int
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 #ifndef GIF_MGET
-    #include <stdlib.h>
     #define GIF_MGET(m,s,a,c) m = (uint8_t*)realloc((c)? 0 : m, (c)? s : 0UL);
 #endif
 #ifndef GIF_BIGE
@@ -292,6 +295,10 @@ GIF_EXTR long GIF_Load(void *data, long size,
     GIF_MGET(whdr.bptr, (unsigned long)(blen + GIF_BLEN + 2), anim, 0)
     return (whdr.nfrm < 0)? (skip - whdr.ifrm - 1) : (whdr.ifrm + 1);
 }
+
+#include "gui_base.h"
+
+GIF read_gif(char *);
 
 #undef _GIF_SWAP
 #ifdef __cplusplus

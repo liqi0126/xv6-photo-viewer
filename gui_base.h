@@ -5,6 +5,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include "types.h"
+
 ushort SCREEN_WIDTH;
 ushort SCREEN_HEIGHT;
 int screen_size; 
