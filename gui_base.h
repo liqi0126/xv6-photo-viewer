@@ -5,6 +5,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include "types.h"
+
 ushort SCREEN_WIDTH;
 ushort SCREEN_HEIGHT;
 int screen_size; 
@@ -22,11 +24,12 @@ typedef struct RGB {
 
 // 32 bit RGBA. used above GUI Utility
 typedef struct RGBA {
-    unsigned char A;
     unsigned char B;
     unsigned char G;
     unsigned char R;
+    unsigned char A;
 } RGBA;
+
 
 typedef struct Rect {
     int x;
@@ -73,7 +76,11 @@ typedef struct Image
 	struct Image* prev;
 	struct Image* next;
 }Image;
-
+typedef struct GIF {
+    long frame_num;
+    long width, height;
+    RGB * data;
+} GIF;
 typedef struct ImageList
 {
 	struct Image* head;
@@ -86,6 +93,39 @@ typedef struct PBitmap
     int height;
     struct RGB* data;
 }PBitmap;
+
+#pragma pack(2)
+typedef struct PBitmapFileHeader{
+    ushort bfType;
+    uint bfSize;
+    ushort bfReserved1;
+    ushort bfReserved2;
+    uint bfOffBits;
+}PBitmapFileHeader;
+
+typedef struct PBitmapInfoHeader{
+    uint biSize;
+    int biWidth;
+    int biHeight;
+    ushort biPlanes;
+    ushort biBitCount;
+    uint biCompression;
+    uint biSizeImage;
+    int biXPelsPerMeter;
+    int biYPelsPerMeter;
+    uint biClrUsed;
+    uint biClrImportant;
+} PBitmapInfoHeader;
+
+typedef struct APNGFrame{
+    PBitmap* bmp;
+    uchar dispose_op;
+    uchar blend_op;
+}APNGFrame;
+
+typedef struct APNG{
+    APNGFrame* frames;
+}APNG;
 
 // gui_base.h
 void drawPoint(struct RGB* , struct RGB);
