@@ -5,8 +5,8 @@
 
 #ifndef __ASSEMBLER__
 
-ushort SCREEN_WIDTH;
-ushort SCREEN_HEIGHT;
+unsigned short SCREEN_WIDTH;
+unsigned short SCREEN_HEIGHT;
 int screen_size; 
 
 #define UTITLE_HEIGHT 30
@@ -84,35 +84,35 @@ typedef struct PBitmap
     int width;
     int height;
     struct RGB* data;
-}PBitmap;
+} PBitmap;
 
 #pragma pack(2)
 typedef struct PBitmapFileHeader{
-    ushort bfType;
-    uint bfSize;
-    ushort bfReserved1;
-    ushort bfReserved2;
-    uint bfOffBits;
+    unsigned short bfType;
+    unsigned int bfSize;
+    unsigned short bfReserved1;
+    unsigned short bfReserved2;
+    unsigned int bfOffBits;
 }PBitmapFileHeader;
 
 typedef struct PBitmapInfoHeader{
-    uint biSize;
+    unsigned int biSize;
     int biWidth;
     int biHeight;
-    ushort biPlanes;
-    ushort biBitCount;
-    uint biCompression;
-    uint biSizeImage;
+    unsigned short biPlanes;
+    unsigned short biBitCount;
+    unsigned int biCompression;
+    unsigned int biSizeImage;
     int biXPelsPerMeter;
     int biYPelsPerMeter;
-    uint biClrUsed;
-    uint biClrImportant;
+    unsigned int biClrUsed;
+    unsigned int biClrImportant;
 } PBitmapInfoHeader;
 
 typedef struct APNGFrame{
     PBitmap* bmp;
-    uchar dispose_op;
-    uchar blend_op;
+    unsigned char dispose_op;
+    unsigned char blend_op;
 }APNGFrame;
 
 typedef struct APNG{

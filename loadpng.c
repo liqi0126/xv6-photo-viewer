@@ -23,20 +23,8 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 */
 
 #include "loadpng.h"
-
-#ifdef LODEPNG_COMPILE_DISK
-#include <limits.h> /* LONG_MAX */
-#include <stdio.h> /* file handling */
-#endif /* LODEPNG_COMPILE_DISK */
-
-#ifdef LODEPNG_COMPILE_ALLOCATORS
-#include <stdlib.h> /* allocations */
-#endif /* LODEPNG_COMPILE_ALLOCATORS */
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1310) /*Visual Studio: A few warning types are not desired here.*/
-#pragma warning( disable : 4244 ) /*implicit conversions: not warned by gcc -Wall -Wextra and requires too much casts*/
-#pragma warning( disable : 4996 ) /*VS does not like fopen, but fopen_s is not standard C so unusable here*/
-#endif /*_MSC_VER */
+#include "user.h"
+#include "types.h"
 
 const char* LODEPNG_VERSION_STRING = "20201017";
 
