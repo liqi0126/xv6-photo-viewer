@@ -1023,6 +1023,7 @@ void MsgProc(struct message * msg)
             int dx = mousePos.x - lastMousePos.x;
             int dy = mousePos.y - lastMousePos.y;
             cutbox_pos.x = cutbox_pos.x + dx;
+            printf(1, "mousePos, %d, %d\n", mousePos.x, mousePos.y);
             if(isMouseInCutBox(cutbox_pos.x, cutbox_pos.y))
             {
                 // cutbox_pos.y = cutbox_pos.y + dy;
@@ -1038,12 +1039,12 @@ void MsgProc(struct message * msg)
                     cutbox_size.w = cutbox_size.w + dx;
                     drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
                 }
+                api_repaint(&wnd);
             }
             else
             {
                 cutbox_pos.x = cutbox_pos.x - dx;
             }
-            api_repaint(&wnd);
             // cutbox_size.h = cutbox_size.h - dy;
         }
         if(mouse_down == 1 && (is_pencil==1 ||  is_rubber == 1) && isMouseInContent(msg->params[0], msg->params[1]))
