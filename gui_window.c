@@ -120,8 +120,8 @@ int drawWndTitleBar(int hwnd) {
     RGB * buf = wnd->wholeContent;
     memset(o, 118, h * w);
     for(int i = 0; i < h; ++i) {
-        for (int j = 0; j < w; ++j) {
-            o = buf + i * w + j;
+        for (int j = 0; j < h; ++j) {
+            o = buf + i * w + w - h + j;
             if (close_btn[i][j] == 0) {
                 o->R = 189;
                 o->G = 110;
