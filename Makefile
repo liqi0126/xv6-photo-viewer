@@ -143,7 +143,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o image_utils.o loader.o loadpng.o loadjpeg.o
+ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o image_utils.o loader.o loadpng.o loadjpeg.o saver.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^

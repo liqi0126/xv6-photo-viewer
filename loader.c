@@ -2,6 +2,7 @@
 #include "fcntl.h"
 #include "loadjpeg.h"
 #include "loadpng.h"
+#include "user.h"
 
 int type(char* filename){
     int len=strlen(filename);

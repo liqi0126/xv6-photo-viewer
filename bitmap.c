@@ -111,8 +111,8 @@ void write24BitmapFileHeader(int bmpFile, int height, int width) {
     bmpInfoHeader.biBitCount = 24;
     bmpInfoHeader.biCompression = 0;               // No Compression
     bmpInfoHeader.biSizeImage = rowSize * height;  // TODO:
-    bmpInfoHeader.biXPelsPerMeter = 0;             //TODO:
-    bmpInfoHeader.biYPelsPerMeter = 0;             //TODO:
+    bmpInfoHeader.biXPelsPerMeter = 100;             //TODO:
+    bmpInfoHeader.biYPelsPerMeter = 100;             //TODO:
     bmpInfoHeader.biCirUserd = 0;
     bmpInfoHeader.biCirImportant = 0;
 

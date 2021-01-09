@@ -48,7 +48,7 @@ typedef struct{
 } BMP_INFO_HEADER;
 
 #pragma pack()
-int rgbToBmpFile(const char *pFileName, PBitmap* bmp, const int format);
-int rgbToJpgFile(const char *pFileName, PBitmap* bmp);
-int rgbToPngFile(const char *pFileName, PBitmap* bmp);
+int rgbToBmpFile(char *pFileName, PBitmap* bmp, const int format);
+int rgbToJpgFile(char *pFileName, PBitmap* bmp);
+int rgbToPngFile(char *pFileName, PBitmap* bmp);
 #endif /* saver_h */
