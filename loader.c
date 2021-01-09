@@ -6,7 +6,7 @@
 
 int type(char* filename){
     int len=strlen(filename);
-    if(filename[len-1]=='g'&&filename[len-2]=='p'&&filename[len-3]=='j') return JPG;
+    if((filename[len-1]=='g'&&filename[len-2]=='p'&&filename[len-3]=='j')||(filename[len-1]=='g'&&filename[len-2]=='e'&&filename[len-3]=='p'&&filename[len-4]=='j')) return JPG;
     if(filename[len-1]=='p'&&filename[len-2]=='m'&&filename[len-3]=='b') return BMP;
     if(filename[len-1]=='g'&&filename[len-2]=='n'&&filename[len-3]=='p') return PNG;
     else return NONE;
