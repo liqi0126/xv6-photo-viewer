@@ -1146,7 +1146,7 @@ main(int argc, char *argv[])
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
-    api_paint24BitmapToContent(&wnd, save_icon, (Point){0,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
+    api_drawUnpressedButton(&wnd, save_icon, (Point){0,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
     api_paint24BitmapToContent(&wnd, delete_icon, (Point){30,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
     api_paint24BitmapToContent(&wnd, pen_icon, (Point){580,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
     api_paint24BitmapToContent(&wnd, rubber_icon, (Point){610,0}, (Point){0,0}, (Size){30,30},(Size){30,30});

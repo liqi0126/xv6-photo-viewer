@@ -83,6 +83,13 @@ void drawRect(RGB *buf, Point p, Size s, RGB color, Size rect_size) {
     }
 }
 
+void drawBorder(RGB* buf, Point p, Size s, RGB color, Size rect_size, int border) {
+    drawRect(buf, p, s, color, (Size){border, s.w});
+    drawRect(buf, (Point){p.x, p.y + s.h - border}, s, color, (Size){border, s.w});
+
+    drawRect(buf, (Point){p.x, p.y + border}, s, color, (Size){s.h - 2 * border, border});
+    drawRect(buf, (Point){p.x + s.w - border, p.y + border}, s, color, (Size){s.h - 2 * border, border});
+}
 
 // pt: start point of target
 // pc: start point of content
