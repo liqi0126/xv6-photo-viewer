@@ -24,7 +24,6 @@ Rename this file to lodepng.cpp to use it for C++, or to lodepng.c to use it for
 
 #include "loadpng.h"
 #include "user.h"
-#include "types.h"
 
 const char* LODEPNG_VERSION_STRING = "20201017";
 
@@ -65,11 +64,13 @@ static void* lodepng_realloc(void* ptr, size_t new_size) {
 #ifdef LODEPNG_MAX_ALLOC
   if(new_size > LODEPNG_MAX_ALLOC) return 0;
 #endif
-  return realloc(ptr, new_size);
+  // return realloc(ptr, new_size);
+  return -1;
 }
 
 static void lodepng_free(void* ptr) {
-  free(ptr);
+  if(ptr)
+    free(ptr);
 }
 #else /*LODEPNG_COMPILE_ALLOCATORS*/
 /* TODO: support giving additional void* payload to the custom allocators */
@@ -324,35 +325,45 @@ static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
 
 /* returns negative value on error. This should be pure C compatible, so no fstat. */
 static long lodepng_filesize(const char* filename) {
-  FILE* file;
-  long size;
-  file = fopen(filename, "rb");
-  if(!file) return -1;
+  // FILE* file;
+  // long size;
+  // file = fopen(filename, "rb");
+  // if(!file) return -1;
 
-  if(fseek(file, 0, SEEK_END) != 0) {
-    fclose(file);
-    return -1;
-  }
+  // if(fseek(file, 0, SEEK_END) != 0) {
+  //   fclose(file);
+  //   return -1;
+  // }
 
-  size = ftell(file);
-  /* It may give LONG_MAX as directory size, this is invalid for us. */
-  if(size == LONG_MAX) size = -1;
+  // size = ftell(file);
+  // /* It may give LONG_MAX as directory size, this is invalid for us. */
+  // if(size == LONG_MAX) size = -1;
 
-  fclose(file);
-  return size;
+  // fclose(file);
+  // return size;
+  struct stat s;
+  stat(filename, &s);
+  return s.size;
 }
 
 /* load file into buffer that already has the correct allocated size. Returns error code.*/
 static unsigned lodepng_buffer_file(unsigned char* out, size_t size, const char* filename) {
-  FILE* file;
-  size_t readsize;
-  file = fopen(filename, "rb");
-  if(!file) return 78;
+  // FILE* file;
+  // size_t readsize;
+  // file = fopen(filename, "rb");
+  // if(!file) return 78;
 
-  readsize = fread(out, 1, size, file);
-  fclose(file);
+  // readsize = fread(out, 1, size, file);
+  // fclose(file);
 
-  if(readsize != size) return 78;
+  // if(readsize != size) return 78;
+  // return 0;
+  int file = open(filename,  O_RDONLY);
+  if (file<0)
+  {
+      return -1;
+  }
+  read(file, out, size);
   return 0;
 }
 
@@ -369,12 +380,13 @@ unsigned lodepng_load_file(unsigned char** out, size_t* outsize, const char* fil
 
 /*write given buffer to the file, overwriting the file, it doesn't append to it.*/
 unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename) {
-  FILE* file;
-  file = fopen(filename, "wb" );
-  if(!file) return 79;
-  fwrite(buffer, 1, buffersize, file);
-  fclose(file);
-  return 0;
+  // FILE* file;
+  // file = fopen(filename, "wb" );
+  // if(!file) return 79;
+  // fwrite(buffer, 1, buffersize, file);
+  // fclose(file);
+  // return 0;
+  return -1;
 }
 
 #endif /*LODEPNG_COMPILE_DISK*/
