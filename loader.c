@@ -26,14 +26,14 @@ PBitmap LoadBmp(char* filename){
     printf("\n info: %x %d %d %d %d, totalsize %d\n", fileHeader.bfType, fileHeader.bfSize,
     fileHeader.bfOffBits, fileHeader.bfReserved1, fileHeader.bfReserved2,sizeof(fileHeader)+sizeof(infoHeader));
     
-    bmp.w = infoHeader.biWidth;
-    bmp.h = infoHeader.biHeight;
-    bmp.data = (PColor*)malloc(bmp.w * bmp.h * sizeof(PColor));
+    bmp.width = infoHeader.biWidth;
+    bmp.height = infoHeader.biHeight;
+    bmp.data = (PColor*)malloc(bmp.width * bmp.height * sizeof(PColor));
     
     int count = infoHeader.biBitCount;
-    int length = (((bmp.w * count) + 31) >> 5) << 2;
-    int size = length * bmp.h;
-    printf("load bitmap l: %d s: %d c: %d width: %d height: %d\n",length,size,count,bmp.w,bmp.h);
+    int length = (((bmp.width * count) + 31) >> 5) << 2;
+    int size = length * bmp.height;
+    printf("load bitmap l: %d s: %d c: %d width: %d height: %d\n",length,size,count,bmp.width,bmp.height);
 
     int wastedLen = fileHeader.bfOffBits - sizeof(fileHeader) - sizeof(infoHeader);
     uchar* waste  = (uchar*)malloc(sizeof(uchar) * wastedLen);
@@ -43,14 +43,14 @@ PBitmap LoadBmp(char* filename){
     read(fd, (char*)data, sizeof(uchar) * fileHeader.bfSize);
 
     int bits = infoHeader.biBitCount / 8;
-    for(int j=0; j<bmp.h; ++j){
-        int offset = (bmp.h - j - 1) * bmp.w;
+    for(int j=0; j<bmp.height; ++j){
+        int offset = (bmp.height - j - 1) * bmp.width;
         int dataOffset = j * length;
-        for(int i=0; i<bmp.w; ++i){
+        for(int i=0; i<bmp.width; ++i){
             int specOffset = dataOffset + bits * (i + 1);
-            bmp.data[offset+i].r = (int)data[specOffset - 1];
-            bmp.data[offset+i].g = (int)data[specOffset - 2];
-            bmp.data[offset+i].b = (int)data[specOffset - 3];
+            bmp.data[offset+i].R = (int)data[specOffset - 1];
+            bmp.data[offset+i].G = (int)data[specOffset - 2];
+            bmp.data[offset+i].B = (int)data[specOffset - 3];
         }
     }
     close(fd);
@@ -77,20 +77,20 @@ PBitmap LoadJpeg(char* filename){
 
    
     PBitmap bmp;
-    bmp.h=0;
-    bmp.w=0;
+    bmp.height=0;
+    bmp.width=0;
     bmp.data=0;
     
     int imgsize = GetImageSize(ctx);
     uchar* c = GetImage(ctx);
-    bmp.w = GetWidth(ctx);
-    bmp.h = GetHeight(ctx);
-    int n = bmp.w * bmp.h;
+    bmp.width = GetWidth(ctx);
+    bmp.height = GetHeight(ctx);
+    int n = bmp.width * bmp.height;
     bmp.data = (PColor*)malloc(n * sizeof(PColor));
     for(int i=0; i<imgsize; i+=3){
-        bmp.data[i/3].r = c[i];
-        bmp.data[i/3].g = c[i+1];
-        bmp.data[i/3].b = c[i+2];
+        bmp.data[i/3].R = c[i];
+        bmp.data[i/3].G = c[i+1];
+        bmp.data[i/3].B = c[i+2];
     }
     return bmp;
 }
@@ -100,22 +100,22 @@ PBitmap LoadPng(char* filename){
     unsigned width, height;
     lodepng_decode24_file(&image, &width, &height, filename);
     PBitmap bmp;
-    bmp.h=height;
-    bmp.w=width;
+    bmp.height=height;
+    bmp.width=width;
     bmp.data=0;
 
     // int imgsize = width * height;
-    int n = bmp.w * bmp.h;
+    int n = bmp.width * bmp.height;
     bmp.data = (PColor *)malloc(sizeof(PColor) * n);
     //这里是用decode24,所以是3个3个的读取
     for (int i = 0; i < n; i += 1)
     {
-        unsigned char r = image[i*3];
-        unsigned char g = image[i*3 + 1];
-        unsigned char b = image[i*3 + 2];
-        bmp.data[i].r = r;
-        bmp.data[i].g = g;
-        bmp.data[i].b = b;
+        unsigned char R = image[i*3];
+        unsigned char G = image[i*3 + 1];
+        unsigned char B = image[i*3 + 2];
+        bmp.data[i].R = R;
+        bmp.data[i].G = G;
+        bmp.data[i].B = B;
 
     }
     // printf(1, "read all png data.\n");
