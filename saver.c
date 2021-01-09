@@ -10,17 +10,17 @@
  
 
  
-int rgbToBmpFile(const char *pFileName, PBitmap* bmp, const int format)
+int rgbToBmpFile(char *pFileName, PBitmap* bmp, const int format)
 {
-    int  nWidth  = bmp->w;
-    int  nHeight = bmp->h;
+    int  nWidth  = bmp->width;
+    int  nHeight = bmp->height;
     char* data =(char*)malloc(sizeof(uchar)*nWidth*nHeight*format);
     char* pRgbaData = (char*)bmp->data;
     
     BMP_FILE_HEADER bmpHeader;
     BMP_INFO_HEADER bmpInfo;
  
-    FILE* fp         = NULL;
+    int fp         = NULL;
     char* pBmpSource = NULL;
     char* pBmpData   = NULL;
  
@@ -58,16 +58,15 @@ int rgbToBmpFile(const char *pFileName, PBitmap* bmp, const int format)
     }
  
     /** open file */
-    fp = fopen(pFileName,"wb+");
-    if (!fp)
+    fp = open(pFileName, O_CREATE|O_RDWR);
+    if (fp<0)
     {
         return -1;
     }
  
-    fwrite(&bmpHeader, sizeof(BMP_FILE_HEADER), 1, fp);
-    fwrite(&bmpInfo,   sizeof(BMP_INFO_HEADER), 1, fp);
-    /** Here you should consider color format. RGBA ? RGB? BGR?
-        Param format is RGBA, format for file is BGR */
+    write(fp, &bmpHeader, sizeof(BMP_FILE_HEADER));
+    write(fp, &bmpInfo, sizeof(BMP_INFO_HEADER));
+    /*RGB format,not RGBA*/
     pBmpData = pBmpSource;
     for (i=0; i<nHeight; i++)
     {
@@ -82,30 +81,30 @@ int rgbToBmpFile(const char *pFileName, PBitmap* bmp, const int format)
         //pack for 4 bytes
         pBmpData +=(bytesPerLine - nWidth*FORMAT_RGB);
     }
-    fwrite(pBmpSource, pixcelBytes, 1, fp);
+    write(fp, pBmpSource, pixcelBytes);
  
     /** close and release。 */
-    fclose(fp);
+    close(fp);
     free(pBmpSource);
  
     return 0;
 }
 
-int rgbToJpgFile(const char *pFileName, PBitmap* bmp){
+int rgbToJpgFile(char *pFileName, PBitmap* bmp){
     
     return 0;
 }
 
-int rgbToPngFile(const char *pFileName, PBitmap* bmp){
-    int  nWidth  = bmp->w;
-    int  nHeight = bmp->h;
+int rgbToPngFile(char *pFileName, PBitmap* bmp){
+    int  nWidth  = bmp->width;
+    int  nHeight = bmp->height;
     uint size = nWidth * nHeight;
     char* data =(char*)malloc(sizeof(uchar)*nWidth*nHeight*FORMAT_RGB);
     RGB* rgb = bmp->data;
     for(int i=0; i<size; ++i){
-        uchar r = rgb[i].b;
-        rgb[i].b = rgb[i].r;
-        rgb[i].r = r;
+        uchar r = rgb[i].B;
+        rgb[i].B = rgb[i].R;
+        rgb[i].R = r;
     }
     char* pRgbData = (char*)bmp->data;
     lodepng_encode24_file(pFileName, pRgbData, nWidth, nHeight);

@@ -577,7 +577,7 @@ int isMouseInSaveButton(int x, int y) {
             save_filename[i]=image_show[image_item-1]->image_type[i-index];
         }
         save_filename[index+filetype_len]='\0';
-        //printf(1, "%d %s %s %s %d %d\n", image_show[image_item-1]->save_time, save_filename, image_show[image_item-1]->image_name, image_show[image_item-1]->image_type, filename_len, filetype_len);
+        // printf(1, "%d %s %s %s %d %d\n", image_show[image_item-1]->save_time, save_filename, image_show[image_item-1]->image_name, image_show[image_item-1]->image_type, filename_len, filetype_len);
         write24BitmapFile(save_filename, edit_img, content_size.h, content_size.w);
         printf(1, "Save succeed.\n");
         ImageListAppend(save_filename, content_size.h*content_size.w*3, strlen(save_filename), image_list, "bmp", 3);
