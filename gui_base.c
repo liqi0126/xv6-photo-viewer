@@ -84,12 +84,13 @@ void drawRect(RGB *buf, Point p, Size s, RGB color, Size rect_size) {
 }
 
 void drawBorder(RGB* buf, Point p, Size s, RGB color, Size rect_size, int border) {
-    drawRect(buf, p, s, color, (Size){border, s.w});
-    drawRect(buf, (Point){p.x, p.y + s.h - border}, s, color, (Size){border, s.w});
+    drawRect(buf, p, s, color, (Size){border, rect_size.w});
+    drawRect(buf, (Point){p.x, p.y + rect_size.h - border}, s, color, (Size){border, rect_size.w});
 
-    drawRect(buf, (Point){p.x, p.y + border}, s, color, (Size){s.h - 2 * border, border});
-    drawRect(buf, (Point){p.x + s.w - border, p.y + border}, s, color, (Size){s.h - 2 * border, border});
+    drawRect(buf, (Point){p.x, p.y + border}, s, color, (Size){rect_size.h - 2 * border, border});
+    drawRect(buf, (Point){p.x + rect_size.w - border, p.y + border}, s, color, (Size){rect_size.h - 2 * border, border});
 }
+
 
 // pt: start point of target
 // pc: start point of content
@@ -163,6 +164,31 @@ void drawTransparentBitmap(struct RGB* tgt, struct RGB* cont, Point pt, Point pc
 
 void copyContent(RGB* tgt, RGB* src, Point p, Size s, Size copy_size) {
     drawBitmap(tgt, src, p, p, s, s, copy_size);
+}
+
+void colorShift(RGB* buf, Point p, Size s, Size rect_size, int shift) {
+    struct RGB * t;
+    int draw_h = rect_size.h;
+    int draw_w = rect_size.w;
+
+    if (draw_h > s.h - p.y) {
+        draw_h = s.h - p.y;
+    }
+
+    if (draw_w > s.w - p.x) {
+        draw_w = s.w - p.x;
+    }
+
+    for (int i = 0; i < draw_h; i++) {
+        for(int j = 0; j < draw_w; j++) {
+            t = buf + (p.y + i) * s.w + p.x + j;
+            if (t->R > 200 && t->G > 200 && t->B > 200) {
+                t->R = (t->R + shift + 256) % 256;
+                t->G = (t->G + shift + 256) % 256;
+                t->B = (t->B + shift + 256) % 256;
+            }
+        }
+    }
 }
 
 void drawMouse(RGB *buf, int mode, int x, int y) {

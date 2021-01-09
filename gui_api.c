@@ -85,19 +85,6 @@ int api_drawString(Window *wnd, int x, int y, char *str, RGBA color) {
     return 0;
 }
 
-int api_drawUnpressedButton(Window* wnd, struct RGB* img, Point pWnd, Point pBmp, Size sBmp, Size s)
-{
-    int borderWidth = 3;
-    RGB borderColor;
-    borderColor.R = 0;
-    borderColor.G = 0;
-    borderColor.B = 0;
-
-    drawBitmap(wnd->content, img, pWnd, pBmp, wnd->size, sBmp, s);
-    drawBorder(wnd->content, pWnd, wnd->size, borderColor, s, borderWidth);
-    return 0;
-}
-
 int api_drawButton(Window *wnd, Point p, Size s, char * str)
 {
     RGB bColor;
@@ -108,6 +95,15 @@ int api_drawButton(Window *wnd, Point p, Size s, char * str)
     api_drawString(wnd, p.x + 10, p.y + 10, str, (RGBA){255,255,255,255});
     return 0;
 }
+
+
+int api_drawImgButton(Window* wnd, struct RGB* img, Point pWnd, Size s, int borderWidth, RGB borderColor, int shift) {
+    drawBitmap(wnd->content, img, pWnd, (Point){0, 0}, wnd->size, s, s);
+    colorShift(wnd->content, pWnd, wnd->size, s, shift);
+    drawBorder(wnd->content, pWnd, wnd->size, borderColor, s, borderWidth);
+    return 0;
+}
+
 
 int api_destroywindow(Window *wnd) {
     destroywindow(wnd->hwnd);

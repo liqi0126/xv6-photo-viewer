@@ -17,5 +17,6 @@ int api_drawString(struct Window *, int, int, char *, struct RGBA);
 int api_destroywindow(struct Window *wnd);
 int api_drawRect(struct Window *, struct Point, struct Size, struct RGB);
 int api_drawButton(struct Window *, struct Point, struct Size, char *);
+int api_drawImgButton(Window* wnd, struct RGB* img, Point pWnd, Size s, int borderWidth, RGB borderColor, int colorShift);
 
 #endif

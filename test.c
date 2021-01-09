@@ -113,8 +113,16 @@ int image_item = 0;
 float scale_degree = 1;
 float turn_degree = 0;
 
+
 ImageList *image_list;
 Image** image_show;
+
+int border1 = 1;
+int border2 = 2;
+RGB borderColor = (RGB){0, 0, 0};
+int normal_shift = 0;
+int hover_shift = -30;
+int pressed_shift = -50;
 
 void ImageListInit(ImageList *image_list)
 {
@@ -930,6 +938,26 @@ void MsgProc(struct message * msg)
 {
     switch (msg->msg_type)
     {
+
+    // api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, delete_icon, (Point){30,0},(Size){30,30}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, zoomout_icon, (Point){200,440}, (Size){60,60}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, rotate_left_90_icon, (Point){260,440}, (Size){60,63}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, rotate_left_30_icon, (Point){325,440}, (Size){60,65}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, rotate_right_30_icon, (Point){390,440}, (Size){60,65}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, rotate_right_90_icon, (Point){455,440}, (Size){60,65}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, rollover_icon, (Point){520,440}, (Size){60,60}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, turnaround_icon, (Point){580,440}, (Size){60,60}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, image_list_up_icon, (Point){47,45}, (Size){20,35}, border2, borderColor, pressed_shift);
+    // api_drawImgButton(&wnd, image_list_down_icon, (Point){47,465}, (Size){20,35}, border2, borderColor, pressed_shift);
+
+
     case M_MOUSE_DOWN:
         if(isMouseInPencilColorButton(msg->params[0], msg->params[1]))
         {
@@ -937,6 +965,7 @@ void MsgProc(struct message * msg)
         }
         if(isMouseInPencilButton(msg->params[0], msg->params[1]))
         {
+            api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, pressed_shift);
             break;
         }
         if(isMouseInRubberButton(msg->params[0], msg->params[1]))
@@ -965,6 +994,7 @@ void MsgProc(struct message * msg)
         }
         if(isMouseInZoominButton(msg->params[0], msg->params[1]))
         {
+            api_drawImgButton(&wnd, zoomin_icon, (Point){140, 440}, (Size){60, 60}, border2, borderColor, pressed_shift);
             break;
         }
         if(isMouseInZoomoutButton(msg->params[0], msg->params[1]))
@@ -1015,6 +1045,7 @@ void MsgProc(struct message * msg)
         }
         break;
     case M_MOUSE_MOVE:
+
         if(mouse_down == 1 && is_cut==1 && isMouseInCutBox(cutbox_pos.x, cutbox_pos.y)) {
             lastMousePos.x = mousePos.x;
             lastMousePos.y = mousePos.y;
@@ -1146,26 +1177,25 @@ main(int argc, char *argv[])
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
-    api_drawUnpressedButton(&wnd, save_icon, (Point){0,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, delete_icon, (Point){30,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, pen_icon, (Point){580,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, rubber_icon, (Point){610,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, red_icon, (Point){555,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, green_icon, (Point){525,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, blue_icon, (Point){495,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, purple_icon, (Point){465,5}, (Point){0,0}, (Size){20,20},(Size){20,20});
-    api_paint24BitmapToContent(&wnd, cut_icon, (Point){60,0}, (Point){0,0}, (Size){30,30},(Size){30,30});
-    api_paint24BitmapToContent(&wnd, zoomin_icon, (Point){140,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
-    api_paint24BitmapToContent(&wnd, zoomout_icon, (Point){200,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
-    api_paint24BitmapToContent(&wnd, rotate_left_90_icon, (Point){260,440}, (Point){0,0}, (Size){60,63},(Size){60,63});
-    api_paint24BitmapToContent(&wnd, rotate_left_30_icon, (Point){325,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
-    api_paint24BitmapToContent(&wnd, rotate_right_30_icon, (Point){390,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
-    api_paint24BitmapToContent(&wnd, rotate_right_90_icon, (Point){455,440}, (Point){0,0}, (Size){60,65},(Size){60,65});
-    api_paint24BitmapToContent(&wnd, rollover_icon, (Point){520,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
-    api_paint24BitmapToContent(&wnd, turnaround_icon, (Point){580,440}, (Point){0,0}, (Size){60,60},(Size){60,60});
-    api_paint24BitmapToContent(&wnd, image_list_up_icon, (Point){47,45}, (Point){0,0}, (Size){20,35},(Size){20,35});
-    api_paint24BitmapToContent(&wnd, image_list_down_icon, (Point){47,465}, (Point){0,0}, (Size){20,35},(Size){20,35});
-    //api_paint24Bitmap(&wnd, rotate_left_90_icon, (Point){180,440}, (Size){60,65});
+    api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, delete_icon, (Point){30,0},(Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, zoomin_icon, (Point){140, 440}, (Size){60, 60}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, zoomout_icon, (Point){200,440}, (Size){60,60}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rotate_left_90_icon, (Point){260,440}, (Size){60,63}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rotate_left_30_icon, (Point){325,440}, (Size){60,65}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rotate_right_30_icon, (Point){390,440}, (Size){60,65}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rotate_right_90_icon, (Point){455,440}, (Size){60,65}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rollover_icon, (Point){520,440}, (Size){60,60}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, turnaround_icon, (Point){580,440}, (Size){60,60}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, image_list_up_icon, (Point){47,45}, (Size){20,35}, border2, borderColor, normal_shift);
+    api_drawImgButton(&wnd, image_list_down_icon, (Point){47,465}, (Size){20,35}, border2, borderColor, normal_shift);
 
     struct RGB *t;
     struct RGB *o;
