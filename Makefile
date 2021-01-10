@@ -235,7 +235,6 @@ IMGS=desktop.bmp\
      separator.bmp\
 	 turnaround-w5.bmp\
 	 rollover-w11.bmp\
-	 giphy_small.bmp\
 	 ok-w3.bmp\
 	 no-w3.bmp\
 	 giphy_small_t.gif\
