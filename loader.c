@@ -16,7 +16,7 @@ PBitmap LoadBmp(char* filename){
     PBitmap bmp = {0, 0, 0};
     int fd;
     if((fd = open(filename, O_RDONLY)) < 0){
-        printf("Can't open %s\n", filename);
+        printf(2, "Can't open %s\n", filename);
         return bmp;
     }
     PBitmapFileHeader fileHeader;
@@ -24,8 +24,6 @@ PBitmap LoadBmp(char* filename){
     
     PBitmapInfoHeader infoHeader;
     read(fd, (char*)&infoHeader, sizeof(infoHeader));
-    printf("\n info: %x %d %d %d %d, totalsize %d\n", fileHeader.bfType, fileHeader.bfSize,
-    fileHeader.bfOffBits, fileHeader.bfReserved1, fileHeader.bfReserved2,sizeof(fileHeader)+sizeof(infoHeader));
     
     bmp.width = infoHeader.biWidth;
     bmp.height = infoHeader.biHeight;
@@ -34,8 +32,7 @@ PBitmap LoadBmp(char* filename){
     int count = infoHeader.biBitCount;
     int length = (((bmp.width * count) + 31) >> 5) << 2;
     int size = length * bmp.height;
-    printf("load bitmap l: %d s: %d c: %d width: %d height: %d\n",length,size,count,bmp.width,bmp.height);
-
+    
     int wastedLen = fileHeader.bfOffBits - sizeof(fileHeader) - sizeof(infoHeader);
     uchar* waste  = (uchar*)malloc(sizeof(uchar) * wastedLen);
     read(fd, (char*)waste, wastedLen);
@@ -119,7 +116,6 @@ PBitmap LoadPng(char* filename){
         bmp.data[i].B = B;
 
     }
-    // printf(1, "read all png data.\n");
     free(image);
     return bmp;
 

@@ -64,8 +64,8 @@ static void* lodepng_realloc(void* ptr, size_t new_size) {
 #ifdef LODEPNG_MAX_ALLOC
   if(new_size > LODEPNG_MAX_ALLOC) return 0;
 #endif
-  // return realloc(ptr, new_size);
-  return -1;
+  return realloc(ptr, new_size);
+  // return -1;
 }
 
 static void lodepng_free(void* ptr) {
@@ -249,9 +249,9 @@ typedef struct ucvector {
 } ucvector;
 
 /*returns 1 if success, 0 if failure ==> nothing done*/
-static unsigned ucvector_resize(ucvector* p, size_t size) {
-  if(size > p->allocsize) {
-    size_t newsize = size + (p->allocsize >> 1u);
+static unsigned ucvector_reserve(ucvector* p, size_t allocsize) {
+  if(allocsize > p->allocsize) {
+    size_t newsize = (allocsize > p->allocsize * 2u) ? allocsize : ((allocsize * 3u) >> 1u);
     void* data = lodepng_realloc(p->data, newsize);
     if(data) {
       p->allocsize = newsize;
@@ -259,6 +259,12 @@ static unsigned ucvector_resize(ucvector* p, size_t size) {
     }
     else return 0; /*error: not enough memory*/
   }
+  return 1;
+}
+
+/*returns 1 if success, 0 if failure ==> nothing done*/
+static unsigned ucvector_resize(ucvector* p, size_t size) {
+  if(!ucvector_reserve(p, size * sizeof(unsigned char))) return 0;
   p->size = size;
   return 1; /*success*/
 }
@@ -1253,8 +1259,8 @@ static unsigned getTreeInflateDynamic(HuffmanTree* tree_ll, HuffmanTree* tree_d,
 }
 
 /*inflate a block with dynamic of fixed Huffman tree. btype must be 1 or 2.*/
-static unsigned inflateHuffmanBlock(ucvector* out, LodePNGBitReader* reader,
-                                    unsigned btype, size_t max_output_size) {
+static unsigned inflateHuffmanBlock(ucvector* out, size_t* pos, LodePNGBitReader* reader,
+                                    unsigned btype) {
   unsigned error = 0;
   HuffmanTree tree_ll; /*the huffman tree for literal and length codes*/
   HuffmanTree tree_d; /*the huffman tree for distance codes*/
@@ -1262,7 +1268,7 @@ static unsigned inflateHuffmanBlock(ucvector* out, LodePNGBitReader* reader,
   HuffmanTree_init(&tree_ll);
   HuffmanTree_init(&tree_d);
 
-  if(btype == 1) error = getTreeInflateFixed(&tree_ll, &tree_d);
+  if(btype == 1) getTreeInflateFixed(&tree_ll, &tree_d);
   else /*if(btype == 2)*/ error = getTreeInflateDynamic(&tree_ll, &tree_d, reader);
 
   while(!error) /*decode all symbols until end reached, breaks at end code*/ {
@@ -1271,8 +1277,10 @@ static unsigned inflateHuffmanBlock(ucvector* out, LodePNGBitReader* reader,
     ensureBits25(reader, 20); /* up to 15 for the huffman symbol, up to 5 for the length extra bits */
     code_ll = huffmanDecodeSymbol(reader, &tree_ll);
     if(code_ll <= 255) /*literal symbol*/ {
-      if(!ucvector_resize(out, out->size + 1)) ERROR_BREAK(83 /*alloc fail*/);
-      out->data[out->size - 1] = (unsigned char)code_ll;
+      /*ucvector_push_back would do the same, but for some reason the two lines below run 10% faster*/
+      if(!ucvector_resize(out, (*pos) + 1)) ERROR_BREAK(83 /*alloc fail*/);
+      out->data[*pos] = (unsigned char)code_ll;
+      ++(*pos);
     } else if(code_ll >= FIRST_LENGTH_CODE_INDEX && code_ll <= LAST_LENGTH_CODE_INDEX) /*length code*/ {
       unsigned code_d, distance;
       unsigned numextrabits_l, numextrabits_d; /*extra bits for length and distance*/
@@ -1308,20 +1316,21 @@ static unsigned inflateHuffmanBlock(ucvector* out, LodePNGBitReader* reader,
       }
 
       /*part 5: fill in all the out[n] values based on the length and dist*/
-      start = out->size;
+      start = (*pos);
       if(distance > start) ERROR_BREAK(52); /*too long backward distance*/
       backward = start - distance;
 
-      if(!ucvector_resize(out, out->size + length)) ERROR_BREAK(83 /*alloc fail*/);
-      if(distance < length) {
+      if(!ucvector_resize(out, (*pos) + length)) ERROR_BREAK(83 /*alloc fail*/);
+      if (distance < length) {
         size_t forward;
-        lodepng_memcpy(out->data + start, out->data + backward, distance);
-        start += distance;
+        lodepng_memcpy(out->data + *pos, out->data + backward, distance);
+        *pos += distance;
         for(forward = distance; forward < length; ++forward) {
-          out->data[start++] = out->data[backward++];
+          out->data[(*pos)++] = out->data[backward++];
         }
       } else {
-        lodepng_memcpy(out->data + start, out->data + backward, length);
+        lodepng_memcpy(out->data + *pos, out->data + backward, length);
+        *pos += length;
       }
     } else if(code_ll == 256) {
       break; /*end code, break the loop*/
@@ -1335,9 +1344,6 @@ static unsigned inflateHuffmanBlock(ucvector* out, LodePNGBitReader* reader,
       /* TODO: revise error codes 10,11,50: the above comment is no longer valid */
       ERROR_BREAK(51); /*error, bit pointer jumps past memory*/
     }
-    if(max_output_size && out->size > max_output_size) {
-      ERROR_BREAK(109); /*error, larger than max size*/
-    }
   }
 
   HuffmanTree_cleanup(&tree_ll);
@@ -1346,8 +1352,8 @@ static unsigned inflateHuffmanBlock(ucvector* out, LodePNGBitReader* reader,
   return error;
 }
 
-static unsigned inflateNoCompression(ucvector* out, LodePNGBitReader* reader,
-                                     const LodePNGDecompressSettings* settings) {
+static unsigned inflateNoCompression(ucvector* out, size_t* pos,
+                                     LodePNGBitReader* reader, const LodePNGDecompressSettings* settings) {
   size_t bytepos;
   size_t size = reader->size;
   unsigned LEN, NLEN, error = 0;
@@ -1365,12 +1371,13 @@ static unsigned inflateNoCompression(ucvector* out, LodePNGBitReader* reader,
     return 21; /*error: NLEN is not one's complement of LEN*/
   }
 
-  if(!ucvector_resize(out, out->size + LEN)) return 83; /*alloc fail*/
+  if(!ucvector_resize(out, (*pos) + LEN)) return 83; /*alloc fail*/
 
   /*read the literal data: LEN bytes are now stored in the out buffer*/
   if(bytepos + LEN > size) return 23; /*error: reading outside of in buffer*/
 
-  lodepng_memcpy(out->data + out->size - LEN, reader->data + bytepos, LEN);
+  lodepng_memcpy(out->data + *pos, reader->data + bytepos, LEN);
+  *pos += LEN;
   bytepos += LEN;
 
   reader->bp = bytepos << 3u;
@@ -1382,11 +1389,11 @@ static unsigned lodepng_inflatev(ucvector* out,
                                  const unsigned char* in, size_t insize,
                                  const LodePNGDecompressSettings* settings) {
   unsigned BFINAL = 0;
+  size_t pos=0;
   LodePNGBitReader reader;
   unsigned error = LodePNGBitReader_init(&reader, in, insize);
 
   if(error) return error;
-
   while(!BFINAL) {
     unsigned BTYPE;
     if(!ensureBits9(&reader, 3)) return 52; /*error, bit pointer will jump past memory*/
@@ -1394,8 +1401,8 @@ static unsigned lodepng_inflatev(ucvector* out,
     BTYPE = readBits(&reader, 2);
 
     if(BTYPE == 3) return 20; /*error: invalid BTYPE*/
-    else if(BTYPE == 0) error = inflateNoCompression(out, &reader, settings); /*no compression*/
-    else error = inflateHuffmanBlock(out, &reader, BTYPE, settings->max_output_size); /*compression, BTYPE 01 or 10*/
+    else if(BTYPE == 0) error = inflateNoCompression(out, &pos, &reader, settings); /*no compression*/
+    else error = inflateHuffmanBlock(out, &pos, &reader, BTYPE); /*compression, BTYPE 01 or 10*/
     if(!error && settings->max_output_size && out->size > settings->max_output_size) error = 109;
     if(error) break;
   }
@@ -2191,7 +2198,6 @@ static unsigned lodepng_zlib_decompressv(ucvector* out,
       "The additional flags shall not specify a preset dictionary."*/
     return 26;
   }
-
   error = inflatev(out, in + 2, insize - 2, settings);
   if(error) return error;
 
@@ -4922,10 +4928,20 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
       if(*w > 1) expected_size += lodepng_get_raw_size_idat((*w + 0) >> 1, (*h + 1) >> 1, bpp);
       expected_size += lodepng_get_raw_size_idat((*w + 0), (*h + 0) >> 1, bpp);
     }
-
-    state->error = zlib_decompress(&scanlines, &scanlines_size, expected_size, idat, idatsize, &state->decoder.zlibsettings);
+    if(!state->error){
+      /* This allocated data will be realloced by zlib_decompress, initially at
+      smaller size again. But the fact that it's already allocated at full size
+      here speeds the multiple reallocs up. TODO: make zlib_decompress support
+      receiving already allocated buffer with expected size instead. */
+      scanlines = (unsigned char*)lodepng_malloc(expected_size);
+      if(!scanlines) state->error = 83; /*alloc fail*/
+      scanlines_size = 0;
+    }
+    if(!state->error){
+      state->error = zlib_decompress(&scanlines, &scanlines_size, expected_size, idat, idatsize, &state->decoder.zlibsettings);
+      if(!state->error && scanlines_size != expected_size) state->error = 91; /*decompressed size doesn't match prediction*/
+    }
   }
-  if(!state->error && scanlines_size != expected_size) state->error = 91; /*decompressed size doesn't match prediction*/
   lodepng_free(idat);
 
   if(!state->error) {
