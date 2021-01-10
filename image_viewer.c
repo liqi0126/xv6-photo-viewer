@@ -1894,8 +1894,8 @@ main(int argc, char *argv[])
 
     save_icon = LoadImg(save_filename);
 
-    PBitmap jpeg = LoadImg("icon1.jpeg");
-    // PBitmap png = LoadImg("icon1.png");
+    // PBitmap jpeg = LoadImg("icon1.jpeg");
+    PBitmap png = LoadImg("icon1.png");
     // read24BitmapFile(save_filename, save_icon, &h, &w);
     printf(1, "Icon %d, %d", h, w);
     read24BitmapFile(delete_filename, delete_icon,&h,&w);

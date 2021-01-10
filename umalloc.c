@@ -91,10 +91,7 @@ malloc(uint nbytes)
 
 void *
 realloc(void *ap, uint nbyte)
-// by lsy
-// 作用:等价于c stdlib中的realloc, 
-// 第一个为输入参数,要重新alloc的指针,必须是malloc产生的指针
-// 第二个是realloc的目标Byte长度
+// 第一个必须是malloc产生的指针
 {
     Header *bp;
 
