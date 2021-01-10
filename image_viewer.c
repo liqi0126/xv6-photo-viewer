@@ -134,6 +134,7 @@ int image_item = 0;
 int gif_frame = 1;
 int current_gif_img_num = 0;
 int color_pick = -1;
+int has_img_content = 0;
 Image* current_gif_img;
 float scale_degree = 1;
 float brightness_degree=1;
@@ -1048,7 +1049,6 @@ int isMouseInListDownButton(int x, int y) {
             image_show[0]=image_show[1];
             image_show[1]=image_show[2];
             image_show[2]=image_show[2]->next;
-            printf(1, "name%d: %s\n", 2, image_show[2]->image_name);
             setImageList();
             api_repaint(&wnd);
         }
@@ -1134,6 +1134,7 @@ void showImageInContent()
 int isMouseInListItem(int x, int y) {
    if (30 <= x && x <= 110 && 80 <= y && y <= 188){
         has_content = 0;
+        has_img_content = 1;
         is_cut = 0;
         api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, normal_shift);
         api_update(&wnd, (Rect){60, 0, 30, 30});
@@ -1144,6 +1145,7 @@ int isMouseInListItem(int x, int y) {
    else if (30 <= x && x <= 110 && 210 <= y && y <= 318)
    {
         has_content = 0;
+        has_img_content = 1;
         is_cut = 0;
         api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, normal_shift);
         api_update(&wnd, (Rect){60, 0, 30, 30});
@@ -1154,6 +1156,7 @@ int isMouseInListItem(int x, int y) {
    else if (30 <= x && x <= 110 && 340 <= y && y <= 448)
    {
         has_content = 0;
+        has_img_content = 1;
         is_cut = 0;
         api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, normal_shift);
         api_update(&wnd, (Rect){60, 0, 30, 30});
@@ -1190,6 +1193,7 @@ int isMouseInDeleteButton(int x, int y) {
         api_repaint(&wnd);
         has_content = 0;
         current_gif_img->is_onshow = 0;
+        has_img_content = 0;
         return 1;
    }
    else {
@@ -1508,39 +1512,39 @@ void MsgProc(struct message * msg)
     switch (msg->msg_type)
     {
     case M_MOUSE_DOWN:
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInPencilColorButton(msg->params[0], msg->params[1]))
+        if( has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInPencilColorButton(msg->params[0], msg->params[1]))
         {
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInPencilButton(msg->params[0], msg->params[1]))
+        if( has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInPencilButton(msg->params[0], msg->params[1]))
         {
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRubberButton(msg->params[0], msg->params[1]))
+        if( has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRubberButton(msg->params[0], msg->params[1]))
         {
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInSaveButton(msg->params[0], msg->params[1]))
+        if( has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInSaveButton(msg->params[0], msg->params[1]))
         {
             api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
             api_update(&wnd, (Rect){0, 0, 30, 30});
             break;
         }
-        if(isMouseInBrightnessUpButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInBrightnessUpButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, brightness_up_icon, (Point){580,0}, (Size){30,30}, border1, borderColor, normal_shift);
             api_update(&wnd, (Rect){580, 0, 30, 30});
             break;
         }
-        if(isMouseInBrightnessDownButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInBrightnessDownButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, brightness_down_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
             api_update(&wnd, (Rect){610, 0, 30, 30});
             break;
         }
-        if(isMouseInDeleteButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInDeleteButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, delete_icon, (Point){30,0},(Size){30,30}, border1, borderColor, normal_shift);
@@ -1565,63 +1569,63 @@ void MsgProc(struct message * msg)
         {
             break;
         }
-        if(isMouseInZoominButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInZoominButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, zoomin_icon, (Point){142, 440}, (Size){60, 60}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){142, 440, 60, 60});
             break;
         }
-        if(isMouseInZoomoutButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInZoomoutButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, zoomout_icon, (Point){202,440}, (Size){60,60}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){202, 440, 60, 60});
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateLeftNinetyButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateLeftNinetyButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, rotate_left_90_icon, (Point){262,440}, (Size){60,63}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){262, 440, 63, 60});
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateLeftThirtyButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateLeftThirtyButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, rotate_left_30_icon, (Point){325,440}, (Size){60,65}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){325, 440, 65, 60});
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateRightNinetyButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateRightNinetyButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, rotate_right_90_icon, (Point){455,440}, (Size){60,65}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){455, 440, 65, 60});
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateRightThirtyButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInRotateRightThirtyButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, rotate_right_30_icon, (Point){390,440}, (Size){60,65}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){390, 440, 65, 60});
             break;
         }
-        if(isMouseInRolloverButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInRolloverButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, rollover_icon, (Point){520,440}, (Size){60,60}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){520, 440, 65, 60});
             break;
         }
-        if(isMouseInTurnaroundButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInTurnaroundButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
             api_drawImgButton(&wnd, turnaround_icon, (Point){580,440}, (Size){60,60}, border2, borderColor, normal_shift);
             api_update(&wnd, (Rect){580, 440, 65, 60});
             break;
         }
-        if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInCutButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInCutButton(msg->params[0], msg->params[1]))
         {
             break;
         }
@@ -1639,7 +1643,7 @@ void MsgProc(struct message * msg)
             mousePos.x = msg->params[0];
             mousePos.y = msg->params[1];
         }
-        if(isMouseInCutBoxConfirmButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInCutBoxConfirmButton(msg->params[0], msg->params[1]))
         {
             struct RGB *t;
             struct RGB *o;
@@ -1667,7 +1671,7 @@ void MsgProc(struct message * msg)
             is_cut_first_move = 0;
             is_cut = 0;
         }
-        if(isMouseInCutBoxCancelButton(msg->params[0], msg->params[1]))
+        if(has_img_content == 1 && isMouseInCutBoxCancelButton(msg->params[0], msg->params[1]))
         {
             is_cut = 0;
             api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, normal_shift);
@@ -1807,7 +1811,6 @@ void MsgProc(struct message * msg)
         }
         break;
     case M_CLOSE_WINDOW:
-        // printf(1, save_icon);
         printf(1, "USER_CLOSE\n");
         free(save_icon.data);
         free(delete_icon);
@@ -1882,7 +1885,6 @@ main(int argc, char *argv[])
     
     // PBitmap png = LoadImg("icon1.png");
     // read24BitmapFile(save_filename, save_icon, &h, &w);
-    printf(1, "Icon %d, %d", h, w);
     read24BitmapFile(delete_filename, delete_icon,&h,&w);
     read24BitmapFile(cut_filename, cut_icon, &h, &w);
     read24BitmapFile(pen_filename, pen_icon, &h, &w);
