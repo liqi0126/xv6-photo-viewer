@@ -189,33 +189,32 @@ IMGS=desktop.bmp\
      test_t.bmp\
      plane_t.bmp\
      painter_t.bmp\
-	 save-w5.bmp\
-	 delete-w3.bmp\
-	 pen-w3.bmp\
-	 rubber-w3.bmp\
-	 cut-w3.bmp\
-	 zoomin-w3.bmp\
-	 zoomout-w2.bmp\
-	 red-circle-w6.bmp\
-	 green-w2.bmp\
-	 blue-w2.bmp\
-	 purple-w2.bmp\
-	 90-left-w3.bmp\
-	 90-right-w4.bmp\
-	 30-left-w3.bmp\
-	 30-right-w3.bmp\
-	 up-w3.bmp\
-	 down-w3.bmp\
-	 bmp-w7.bmp\
-	 turnaround-w5.bmp\
-	 rollover-w11.bmp\
-	 ok-w3.bmp\
-	 no-w3.bmp\
+	 save-w5.jpeg\
+	 delete-w3.jpeg\
+	 pen-w3.jpeg\
+	 rubber-w3.jpeg\
+	 cut-w3.jpeg\
+	 zoomin-w3.jpeg\
+	 zoomout-w2.jpeg\
+	 red-circle-w6.jpeg\
+	 green-w2.jpeg\
+	 blue-w2.jpeg\
+	 purple-w2.jpeg\
+	 90-left-w3.jpeg\
+	 90-right-w4.jpeg\
+	 30-left-w3.jpeg\
+	 30-right-w3.jpeg\
+	 up-w3.jpeg\
+	 down-w3.jpeg\
+	 turnaround-w5.jpeg\
+	 rollover-w11.jpeg\
+	 ok-w3.jpeg\
+	 no-w3.jpeg\
 	 giphy_small_t.gif\
 	 icon1_t.jpeg\
 	 icon1.png\
-	 brightness_up_w4.bmp\
-	 brightness_down_w4.bmp\
+	 brightness_up_w4.jpeg\
+	 brightness_down_w4.jpeg\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)
