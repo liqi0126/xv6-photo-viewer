@@ -806,7 +806,7 @@ int isMouseInPencilButton(int x, int y) {
 
 int isMouseInSaveButton(int x, int y) {
    if (0 <= x && x <= 30 && 0 <= y && y <= 30){
-        api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, pressed_shift);
+        api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, pressed_shift);
         api_update(&wnd, (Rect){0, 0, 30, 30});
         struct RGB *t;
         struct RGB *o;
@@ -1535,7 +1535,7 @@ void MsgProc(struct message * msg)
         }
         if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInSaveButton(msg->params[0], msg->params[1]))
         {
-            api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
+            api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
             api_update(&wnd, (Rect){0, 0, 30, 30});
             break;
         }
@@ -1894,8 +1894,8 @@ main(int argc, char *argv[])
 
     save_icon = LoadImg(save_filename);
 
-    // PBitmap jpeg = LoadImg("jpeg.jpeg");
-    // PBitmap png = LoadImg("png.png");
+    PBitmap jpeg = LoadImg("icon1.jpeg");
+    // PBitmap png = LoadImg("icon1.png");
     // read24BitmapFile(save_filename, save_icon, &h, &w);
     printf(1, "Icon %d, %d", h, w);
     read24BitmapFile(delete_filename, delete_icon,&h,&w);
