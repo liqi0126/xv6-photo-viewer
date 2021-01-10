@@ -142,7 +142,7 @@ Image** image_show;
 
 int border1 = 1;
 int border2 = 2;
-RGB borderColor = (RGB){0, 0, 0};
+RGB borderColor = (RGB){50, 50, 50};
 int normal_shift = 0;
 int hover_shift = -30;
 int pressed_shift = -50;
@@ -1993,6 +1993,8 @@ main(int argc, char *argv[])
     api_drawImgButton(&wnd, turnaround_icon, (Point){580,440}, (Size){60,60}, border2, borderColor, normal_shift);
     api_drawImgButton(&wnd, image_list_up_icon, (Point){47,45}, (Size){20,35}, border2, borderColor, normal_shift);
     api_drawImgButton(&wnd, image_list_down_icon, (Point){47,465}, (Size){20,35}, border2, borderColor, normal_shift);
+    api_drawRect(&wnd, (Point){142, 30}, (Size){600, border2}, borderColor);
+    api_drawRect(&wnd, (Point){0, 30}, (Size){border2, 800}, borderColor);
 
     struct RGB *t;
     struct RGB *o;
