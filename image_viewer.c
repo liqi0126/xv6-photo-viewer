@@ -236,6 +236,7 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         }
         append_image->image_type[len]='\0';
         append_image->image_size=size;
+        printf(1, "Image: name: %s, type: %s, size: %d\n", append_image->image_name, append_image->image_type, append_image->image_size);
         int h,w;
         if(strcmp(append_image->image_type, "bmp")==0)
         {
@@ -432,6 +433,7 @@ ls_new(char *path)
     strcpy(buf, path);
     p = buf+strlen(buf);
     *p++ = '/';
+    printf(1, "Image loading...\n");
     while(read(fd, &de, sizeof(de)) == sizeof(de)){
       if(de.inum == 0)
         continue;
