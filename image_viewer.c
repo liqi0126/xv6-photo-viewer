@@ -246,12 +246,19 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         else if(strcmp(append_image->image_type, "gif")==0)
         {
             GIF gif = read_gif(append_image->image_name);
-            printf(1, "gif: %d %d %d", gif.height, gif.width, gif.frame_num);
             append_image->data=(RGB*)malloc(sizeof(RGB)*gif.height*gif.width*gif.frame_num);
             memmove(append_image->data, gif.data, gif.height*gif.width*gif.frame_num*3);
             h=gif.height*gif.frame_num;
             w=gif.width;
             append_image->gif_img_num = gif.frame_num;
+        }
+        else if(strcmp(append_image->image_type, "jpeg")==0)
+        {
+            PBitmap img_png_or_jpeg = LoadImg(append_image->image_name);
+            append_image->data=(RGB*)malloc(sizeof(RGB)*img_png_or_jpeg.width*img_png_or_jpeg.height);
+            memmove(append_image->data, img_png_or_jpeg.data, img_png_or_jpeg.width*img_png_or_jpeg.height*3);
+            h=img_png_or_jpeg.height;
+            w=img_png_or_jpeg.width;
         }
         append_image->h=h;
         append_image->w=w;
@@ -270,7 +277,6 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
             struct RGB *t;
             struct RGB *o;
             int max_line = image_origin_preview->height;
-            printf(1, "h: %d\n", max_line);
             for (int i = 0; i < image_origin_preview->height; i++) {
                 o = append_image->data + i * image_origin_preview->height;
                 t = append_image->gif_preview + i * image_origin_preview->height;
@@ -362,54 +368,6 @@ fmtname(char *path)
 }
 
 void
-ls(char *path)
-{
-  char buf[512], *p;
-  int fd;
-  struct dirent de;
-  struct stat st;
-  
-  if((fd = open(path, 0)) < 0){
-    printf(2, "ls: cannot open %s\n", path);
-    return;
-  }
-  
-  if(fstat(fd, &st) < 0){
-    printf(2, "ls: cannot stat %s\n", path);
-    close(fd);
-    return;
-  }
-  
-  switch(st.type){
-  case T_FILE:
-    printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
-    break;
-  
-  case T_DIR:
-    if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
-      printf(1, "ls: path too long\n");
-      break;
-    }
-    strcpy(buf, path);
-    p = buf+strlen(buf);
-    *p++ = '/';
-    while(read(fd, &de, sizeof(de)) == sizeof(de)){
-      if(de.inum == 0)
-        continue;
-      memmove(p, de.name, DIRSIZ);
-      p[DIRSIZ] = 0;
-      if(stat(buf, &st) < 0){
-        printf(1, "ls: cannot stat %s\n", buf);
-        continue;
-      }
-      printf(1, "%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
-    }
-    break;
-  }
-  close(fd);
-}
-
-void
 ls_new(char *path)
 {
   char buf[512], *p;
@@ -461,21 +419,16 @@ ls_new(char *path)
       if(is_file == 0)
       {
           char tem[]="not a file";
-          printf(1, "%s %d %d %d %s\n", filename, st.type, st.ino, st.size, tem);
       }
       else if(is_file == 1)
       {
           filetype++;
           char tem[DIRSIZ+1];
           memmove(tem, filetype, strlen(filetype));
-          printf(1, "%s %d %d %d %s %c\n", filename, st.type, st.ino, st.size, tem, filename[strlen(filename)-strlen(filetype)-2]);
-          // adjust image size here
           if(filename[strlen(filename)-strlen(filetype)-2]=='t' && filename[strlen(filename)-strlen(filetype)-3]=='_')
           {
               ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
           }
-        //   if(st.size<1000000) ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
-        //   else if(st.size == 1080138) ImageListAppend(filename, st.size, strlen(filename), image_list, tem, strlen(tem));
       }
     }
     break;
@@ -1059,7 +1012,6 @@ void setImageList()
         else if(name_len<=15 && name_len>=0)
         {
             offset_x=(140-name_len*9)/2;
-            printf(1, "name: %s\n", image_show[i]->image_name);   
             api_drawString(&wnd, offset_x, 80+130*i+90, image_show[i]->image_name, image_name_color);
         }
         api_repaint(&wnd);
@@ -1280,7 +1232,6 @@ void image_scale_process(float zoom_degree)
         free(image_in_content_scaled);
         api_repaint(&wnd);
         has_content = 1;
-        printf(1, "yes!!\n\n\n");
     }
     else
     {
@@ -1557,7 +1508,6 @@ void MsgProc(struct message * msg)
     switch (msg->msg_type)
     {
     case M_MOUSE_DOWN:
-        printf(1, "yes!");
         if( (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInPencilColorButton(msg->params[0], msg->params[1]))
         {
             break;
@@ -1728,7 +1678,6 @@ void MsgProc(struct message * msg)
         }
         break;
     case M_MOUSE_UP:
-        printf(1, "yes!");
         mouse_down = 0;
         break;
     case M_MOUSE_MOVE:
@@ -1745,18 +1694,15 @@ void MsgProc(struct message * msg)
             mousePos.y = msg->params[1];
             int dx = mousePos.x - lastMousePos.x;
             int dy = mousePos.y - lastMousePos.y;
-            printf(1, "mousePos, %d, %d\n", mousePos.x, mousePos.y);
             if(dx < 20 && dx > -20 && dy < 20 && dy > -20)
             {
                 if(isMouseInCutBoxLeft(lastMousePos.x, lastMousePos.y))
                 {
                     if(isCutBoxInContent(cutbox_pos.x + dx, cutbox_pos.y, cutbox_size.w - dx, cutbox_size.h) && !isCutBoxSmallest(cutbox_size.w - dx, cutbox_size.h))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_pos.x = cutbox_pos.x + dx;
                         cutbox_size.w = cutbox_size.w - dx;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1764,10 +1710,8 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w + dx, cutbox_size.h) && !isCutBoxSmallest(cutbox_size.w + dx, cutbox_size.h))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_size.w = cutbox_size.w + dx;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1775,11 +1719,9 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y + dy, cutbox_size.w, cutbox_size.h - dy) && !isCutBoxSmallest(cutbox_size.w, cutbox_size.h - dy))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_pos.y = cutbox_pos.y + dy;
                         cutbox_size.h = cutbox_size.h - dy;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1787,10 +1729,8 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h + dy) && !isCutBoxSmallest(cutbox_size.w, cutbox_size.h + dy))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_size.h = cutbox_size.h + dy;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1798,13 +1738,11 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x + dx, cutbox_pos.y + dy, cutbox_size.w - dx, cutbox_size.h - dy) && !isCutBoxSmallest(cutbox_size.w - dx, cutbox_size.h - dy))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_pos.x = cutbox_pos.x + dx;
                         cutbox_pos.y = cutbox_pos.y + dy;
                         cutbox_size.w = cutbox_size.w - dx;
                         cutbox_size.h = cutbox_size.h - dy;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1812,12 +1750,10 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y + dy, cutbox_size.w + dx, cutbox_size.h - dy) && !isCutBoxSmallest(cutbox_size.w + dx, cutbox_size.h - dy))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_pos.y = cutbox_pos.y + dy;
                         cutbox_size.w = cutbox_size.w + dx;
                         cutbox_size.h = cutbox_size.h - dy;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1825,12 +1761,10 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x + dx, cutbox_pos.y, cutbox_size.w - dx, cutbox_size.h + dy) && !isCutBoxSmallest(cutbox_size.w - dx, cutbox_size.h + dy))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_pos.x = cutbox_pos.x + dx;
                         cutbox_size.w = cutbox_size.w - dx;
                         cutbox_size.h = cutbox_size.h + dy;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1838,11 +1772,9 @@ void MsgProc(struct message * msg)
                 {
                     if(isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w + dx, cutbox_size.h + dy) && !isCutBoxSmallest(cutbox_size.w + dx, cutbox_size.h + dy))
                     {
-                        printf(1, "lastmousePos, %d, %d\n", lastMousePos.x, lastMousePos.y);
                         cutbox_size.w = cutbox_size.w + dx;
                         cutbox_size.h = cutbox_size.h + dy;
                         drawCutBox(cutbox_pos, cutbox_size.w, cutbox_size.h);
-                        printf(1, "40, %d, %d, %d\n", cutbox_pos.x, cutbox_pos.y, isCutBoxInContent(cutbox_pos.x, cutbox_pos.y, cutbox_size.w, cutbox_size.h));
                         api_repaint(&wnd);
                     }
                 }
@@ -1947,7 +1879,7 @@ main(int argc, char *argv[])
 
     save_icon = LoadImg(save_filename);
 
-    PBitmap jpeg = LoadImg("icon1.jpeg");
+    
     // PBitmap png = LoadImg("icon1.png");
     // read24BitmapFile(save_filename, save_icon, &h, &w);
     printf(1, "Icon %d, %d", h, w);
@@ -2040,7 +1972,6 @@ main(int argc, char *argv[])
     image_list=(ImageList* )malloc(sizeof(ImageList));
 	ImageListInit(image_list);
     ls_new(".");
-    ls(".");
     Image *header;
     header = image_list->head;
     image_show=(Image**)malloc(sizeof(Image*)*3);

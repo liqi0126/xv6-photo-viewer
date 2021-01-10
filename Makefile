@@ -212,7 +212,7 @@ IMGS=desktop.bmp\
 	 ok-w3.bmp\
 	 no-w3.bmp\
 	 giphy_small_t.gif\
-	 icon1.jpeg\
+	 icon1_t.jpeg\
 	 icon1.png\
 	 brightness_up_w4.bmp\
 	 brightness_down_w4.bmp\
