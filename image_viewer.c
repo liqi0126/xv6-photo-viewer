@@ -251,7 +251,7 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
             w=gif.width;
             append_image->gif_img_num = gif.frame_num;
         }
-        else if(strcmp(append_image->image_type, "jpeg")==0)
+        else if(strcmp(append_image->image_type, "jpeg")==0 || strcmp(append_image->image_type, "png")==0)
         {
             PBitmap img_png_or_jpeg = LoadImg(append_image->image_name);
             append_image->data=(RGB*)malloc(sizeof(RGB)*img_png_or_jpeg.width*img_png_or_jpeg.height);
@@ -261,13 +261,43 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         }
         append_image->h=h;
         append_image->w=w;
+        append_image->is_onshow = 0;
+        len=0;
+        append_image->scale_needed=0;
         if(strcmp(append_image->image_type, "gif")!=0)
         {
             append_image->gif_img_num = 1;
         }
-        append_image->is_onshow = 0;
-        len=0;
-        append_image->scale_needed=0;
+        int is_large = 0;
+        PBitmap* large_image_origin;
+        PBitmap* image_origin_scale;
+        if(strcmp(append_image->image_type, "gif")!=0)
+        {
+            if(h>410 || w>500)
+            {
+                float scale_tem_origin=1;
+                if(h>=w)
+                {
+                    scale_tem_origin=(float)410/h;
+                }
+                else
+                {
+                    scale_tem_origin=(float)500/w;
+                }
+                append_image->h=append_image->h*scale_tem_origin;
+                append_image->w=append_image->w*scale_tem_origin;
+                image_origin_scale->data=(RGB*)malloc(sizeof(RGB)*append_image->h*append_image->w);
+                image_origin_scale->height=append_image->h;
+                image_origin_scale->width=append_image->w;
+                large_image_origin->height=h;
+                large_image_origin->width=w;
+                large_image_origin->data=append_image->data;
+                picScale(large_image_origin, image_origin_scale);
+                // free(append_image->data);
+                // append_image->data = image_origin_scale->data;
+                is_large = 1;
+            }
+        }
         if(strcmp(append_image->image_type, "gif")==0)
         {
             image_origin_preview->height=h/append_image->gif_img_num;
@@ -328,6 +358,10 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
                 append_image->scale_h=image_scale_preview->height;
                 append_image->scale_w=image_scale_preview->width;
             }
+        }
+        if(is_large==1)
+        {
+            append_image->data = image_origin_scale->data;
         }
         append_image->save_time=0;
         if(image_list->tail==0)
@@ -1233,7 +1267,7 @@ void image_scale_process(float zoom_degree)
     }
     else
     {
-        if((int)image_origin->height*scale_degree*zoom_degree >= edit_img_size.h || (int)image_origin->width*scale_degree*zoom_degree >= edit_img_size.w)
+        if((int)image_origin->height*scale_degree*zoom_degree > edit_img_size.h || (int)image_origin->width*scale_degree*zoom_degree > edit_img_size.w)
         {
             return;
         }
@@ -1287,6 +1321,10 @@ int isMouseInZoomoutButton(int x, int y) {
 
 void image_turn_process(float rotate_degree)
 {
+    if((int)image_origin->height > edit_img_size.w || (int)image_origin->width > edit_img_size.h)
+    {
+        return;
+    }
     turn_degree=turn_degree+rotate_degree;
     image_turn->height=image_origin->height;
     image_turn->width=image_origin->width;
@@ -1877,50 +1915,73 @@ main(int argc, char *argv[])
     // PBitmap png = LoadImg("icon1.png");
     PBitmap save = LoadImg(save_filename);
     memmove(save_icon, save.data, 30*30*3);
+    free(save.data);
     PBitmap delete = LoadImg(delete_filename);
     memmove(delete_icon, delete.data, 30*30*3);
+    free(delete.data);
     PBitmap cut = LoadImg(cut_filename);
     memmove(cut_icon, cut.data, 30*30*3);
+    free(cut.data);
     PBitmap pen = LoadImg(pen_filename);
     memmove(pen_icon, pen.data, 30*30*3);
+    free(pen.data);
     PBitmap rubber = LoadImg(rubber_filename);
     memmove(rubber_icon, rubber.data, 30*30*3);
+    free(rubber.data);
     PBitmap red = LoadImg(red_filename);
     memmove(red_icon, red.data, 20*20*3);
+    free(red.data);
     PBitmap green = LoadImg(green_filename);
     memmove(green_icon, green.data, 20*20*3);
+    free(green.data);
     PBitmap blue = LoadImg(blue_filename);
     memmove(blue_icon, blue.data, 20*20*3);
+    free(blue.data);
     PBitmap purple = LoadImg(purple_filename);
     memmove(purple_icon, purple.data, 20*20*3);
+    free(purple.data);
     PBitmap zoomin = LoadImg(zoomin_filename);
     memmove(zoomin_icon, zoomin.data, 60*60*3);
+    free(zoomin.data);
     PBitmap zoomout = LoadImg(zoomout_filename);
     memmove(zoomout_icon, zoomout.data, 60*60*3);
+    free(zoomout.data);
     PBitmap rotate_left_90 = LoadImg(rotate_left_90_filename);
     memmove(rotate_left_90_icon, rotate_left_90.data, 60*63*3);
+    free(rotate_left_90.data);
     PBitmap rotate_left_30 = LoadImg(rotate_left_30_filename);
     memmove(rotate_left_30_icon, rotate_left_30.data, 60*65*3);
+    free(rotate_left_30.data);
     PBitmap rotate_right_30 = LoadImg(rotate_right_30_filename);
     memmove(rotate_right_30_icon, rotate_right_30.data, 60*65*3);
+    free(rotate_right_30.data);
     PBitmap rotate_right_90 = LoadImg(rotate_right_90_filename);
     memmove(rotate_right_90_icon, rotate_right_90.data, 60*65*3);
+    free(rotate_right_90.data);
     PBitmap image_list_down = LoadImg(image_list_down_filename);
     memmove(image_list_down_icon, image_list_down.data, 35*20*3);
+    free(image_list_down.data);
     PBitmap image_list_up = LoadImg(image_list_up_filename);
     memmove(image_list_up_icon, image_list_up.data, 35*20*3);
+    free(image_list_up.data);
     PBitmap rollover = LoadImg(rollover_filename);
     memmove(rollover_icon, rollover.data, 60*60*3);
+    free(rollover.data);
     PBitmap turnaround = LoadImg(turnaround_filename);
     memmove(turnaround_icon, turnaround.data, 60*60*3);
+    free(turnaround.data);
     PBitmap cut_confirm = LoadImg(cut_confirm_filename);
     memmove(cut_confirm_icon, cut_confirm.data, cut_box_button_width*cut_box_button_height*3);
+    free(cut_confirm.data);
     PBitmap cut_cancel = LoadImg(cut_cancel_filename);
     memmove(cut_cancel_icon, cut_cancel.data, cut_box_button_width*cut_box_button_height*3);
+    free(cut_cancel.data);
     PBitmap brightness_up = LoadImg(brightness_up_filename);
     memmove(brightness_up_icon, brightness_up.data, 30*30*3);
+    free(brightness_up.data);
     PBitmap brightness_down = LoadImg(brightness_down_filename);
     memmove(brightness_down_icon, brightness_down.data, 30*30*3);
+    free(brightness_down.data);
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
