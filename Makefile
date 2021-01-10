@@ -212,6 +212,8 @@ IMGS=desktop.bmp\
 	 ok-w3.bmp\
 	 no-w3.bmp\
 	 giphy_small_t.gif\
+	 brightness_up_w4.bmp\
+	 brightness_down_w4.bmp\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)

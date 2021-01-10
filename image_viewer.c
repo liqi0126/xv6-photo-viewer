@@ -48,6 +48,8 @@ RGB* rollover_icon;
 RGB* turnaround_icon;
 RGB* cut_confirm_icon;
 RGB* cut_cancel_icon;
+RGB* brightness_up_icon;
+RGB* brightness_down_icon;
 RGB* edit_img;
 RGB* edit_img_test;
 RGB* edit_img_origin;
@@ -94,6 +96,8 @@ char rollover_filename[] = "rollover-w11.bmp";
 char turnaround_filename[] = "turnaround-w5.bmp";
 char cut_confirm_filename[] = "ok-w3.bmp";
 char cut_cancel_filename[] = "no-w3.bmp";
+char brightness_up_filename[] = "brightness_up_w4.bmp";
+char brightness_down_filename[] = "brightness_down_w4.bmp";
 char filename[] = "testtest.bmp";
 
 RGB pencil_color={0,0,255};
@@ -130,6 +134,7 @@ int current_gif_img_num = 0;
 int color_pick = -1;
 Image* current_gif_img;
 float scale_degree = 1;
+float brightness_degree=1;
 float turn_degree = 0;
 
 ImageList *image_list;
@@ -615,83 +620,83 @@ int isMouseInContent(int x, int y) {
 void setColorItem() {
     if (color_pick == -1)
     {
-        api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_update(&wnd, (Rect){555, 5, 20, 20});
-        api_update(&wnd, (Rect){525, 5, 20, 20});
+        api_drawImgButton(&wnd, red_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, green_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, blue_icon, (Point){435,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, purple_icon, (Point){405,5}, (Size){20,20}, 0, borderColor, normal_shift);
         api_update(&wnd, (Rect){495, 5, 20, 20});
         api_update(&wnd, (Rect){465, 5, 20, 20});
+        api_update(&wnd, (Rect){435, 5, 20, 20});
+        api_update(&wnd, (Rect){405, 5, 20, 20});
     }
     else if (color_pick == 0)
     {
-        api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, border1, borderColor, normal_shift);
-        api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_update(&wnd, (Rect){555, 5, 20, 20});
-        api_update(&wnd, (Rect){525, 5, 20, 20});
+        api_drawImgButton(&wnd, red_icon, (Point){495,5}, (Size){20,20}, border1, borderColor, normal_shift);
+        api_drawImgButton(&wnd, green_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, blue_icon, (Point){435,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, purple_icon, (Point){405,5}, (Size){20,20}, 0, borderColor, normal_shift);
         api_update(&wnd, (Rect){495, 5, 20, 20});
         api_update(&wnd, (Rect){465, 5, 20, 20});
+        api_update(&wnd, (Rect){435, 5, 20, 20});
+        api_update(&wnd, (Rect){405, 5, 20, 20});
     }
     else if (color_pick == 1)
     {
-        api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, border1, borderColor, normal_shift);
-        api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_update(&wnd, (Rect){555, 5, 20, 20});
-        api_update(&wnd, (Rect){525, 5, 20, 20});
+        api_drawImgButton(&wnd, red_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, green_icon, (Point){465,5}, (Size){20,20}, border1, borderColor, normal_shift);
+        api_drawImgButton(&wnd, blue_icon, (Point){435,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, purple_icon, (Point){405,5}, (Size){20,20}, 0, borderColor, normal_shift);
         api_update(&wnd, (Rect){495, 5, 20, 20});
         api_update(&wnd, (Rect){465, 5, 20, 20});
+        api_update(&wnd, (Rect){435, 5, 20, 20});
+        api_update(&wnd, (Rect){405, 5, 20, 20});
     }
     else if (color_pick == 2)
     {
-        api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, border1, borderColor, normal_shift);
-        api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_update(&wnd, (Rect){555, 5, 20, 20});
-        api_update(&wnd, (Rect){525, 5, 20, 20});
+        api_drawImgButton(&wnd, red_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, green_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, blue_icon, (Point){435,5}, (Size){20,20}, border1, borderColor, normal_shift);
+        api_drawImgButton(&wnd, purple_icon, (Point){405,5}, (Size){20,20}, 0, borderColor, normal_shift);
         api_update(&wnd, (Rect){495, 5, 20, 20});
         api_update(&wnd, (Rect){465, 5, 20, 20});
+        api_update(&wnd, (Rect){435, 5, 20, 20});
+        api_update(&wnd, (Rect){405, 5, 20, 20});
     }
     else if (color_pick == 3)
     {
-        api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
-        api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, border1, borderColor, normal_shift);
-        api_update(&wnd, (Rect){555, 5, 20, 20});
-        api_update(&wnd, (Rect){525, 5, 20, 20});
+        api_drawImgButton(&wnd, red_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, green_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, blue_icon, (Point){435,5}, (Size){20,20}, 0, borderColor, normal_shift);
+        api_drawImgButton(&wnd, purple_icon, (Point){405,5}, (Size){20,20}, border1, borderColor, normal_shift);
         api_update(&wnd, (Rect){495, 5, 20, 20});
         api_update(&wnd, (Rect){465, 5, 20, 20});
+        api_update(&wnd, (Rect){435, 5, 20, 20});
+        api_update(&wnd, (Rect){405, 5, 20, 20});
     }
 }
 
 int isMouseInPencilColorButton(int x, int y) {
-    if (555 <= x && x <= 575 && 5 <= y && y <= 25){
+    if (495 <= x && x <= 515 && 5 <= y && y <= 25){
         pencil_color = (RGB){0,0,255};
         color_pick = 0;
         setColorItem();
         return 1;
     }
-    else if(525 <= x && x <= 545 && 5 <= y && y <= 25)
+    else if(465 <= x && x <= 485 && 5 <= y && y <= 25)
     {
         pencil_color = (RGB){0,255,0};
         color_pick = 1;
         setColorItem();
         return 1;
     }
-    else if(495 <= x && x <= 515 && 5 <= y && y <= 25)
+    else if(435 <= x && x <= 455 && 5 <= y && y <= 25)
     {
         pencil_color = (RGB){255,0,0};
         color_pick = 2;
         setColorItem();
         return 1;
     }
-    else if(465 <= x && x <= 485 && 5 <= y && y <= 25)
+    else if(405 <= x && x <= 425 && 5 <= y && y <= 25)
     {
         pencil_color = (RGB){128,0,128};
         color_pick = 3;
@@ -704,68 +709,25 @@ int isMouseInPencilColorButton(int x, int y) {
 }
 
 int isMouseInRubberButton(int x, int y) {
-   if (610 < x && x <= 640 && 0 <= y && y <= 30){
+   if (550 < x && x <= 580 && 0 <= y && y <= 30){
         pencil_color = (RGB){255,255,255};
         if(is_rubber == 0) 
         {
             is_rubber = 1;
             is_pencil = 0;
             color_pick = -1;
-            api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, pressed_shift);
-            api_update(&wnd, (Rect){610, 0, 30, 30});
-            api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, normal_shift);
-            api_update(&wnd, (Rect){579, 0, 30, 30});
+            api_drawImgButton(&wnd, rubber_icon, (Point){550,0}, (Size){30,30}, border1, borderColor, pressed_shift);
+            api_update(&wnd, (Rect){550, 0, 30, 30});
+            api_drawImgButton(&wnd, pen_icon, (Point){520,0}, (Size){30,30}, border1, borderColor, normal_shift);
+            api_update(&wnd, (Rect){520, 0, 30, 30});
             setColorItem();
         }
         else if(is_rubber == 1) 
         {
             is_rubber = 0;
-            api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
-            api_update(&wnd, (Rect){610, 0, 30, 30});
+            api_drawImgButton(&wnd, rubber_icon, (Point){550,0}, (Size){30,30}, border1, borderColor, normal_shift);
+            api_update(&wnd, (Rect){550, 0, 30, 30});
         }
-        // edit_img = malloc(content_size.h*content_size.w*3);
-        // int max_line = content_size.w;
-        // struct RGB *t;
-        // struct RGB *o;
-        // for (int i = 0; i < content_size.h; i++) {
-        //     o = wnd.content + (content_pos.y + i) * wnd.size.w + content_pos.x;
-        //     t = edit_img + i * content_size.w;
-        //     memmove(t, o, max_line * 3);
-        // }
-        // for(int i=0;i< content_size.h*content_size.w;i++)
-        // {
-        //     // int Max = max((int)edit_img[i].R,(int)edit_img[i].G,(int)edit_img[i].B);
-        //     // int Min = min((int)edit_img[i].R,(int)edit_img[i].G,(int)edit_img[i].B);
-        //     // int H = 0;
-        //     // if((int)edit_img[i].R==Max)
-        //     // {
-        //     //     H = (edit_img[i].G-edit_img[i].B)/(Max-Min);
-        //     // }
-        //     // else if((int)edit_img[i].G==Max)
-        //     // {
-        //     //     H = 2 + (edit_img[i].B-edit_img[i].R)/(Max-Min);
-        //     // }
-        //     // else if((int)edit_img[i].B==Max)
-        //     // {
-        //     //     H = 4 + (edit_img[i].R-edit_img[i].G)/(Max-Min);
-        //     // }
-        //     // H = H * 60;
-        //     // if(H < 0)
-        //     // {
-        //     //     H = H + 360;
-        //     // }
-        //     // int V = Max;
-        //     // int S=(Max-Min)/Max;
-        //     float Y = 0.299*(float)edit_img[i].R + 0.587*(float)edit_img[i].G + 0.114*(float)edit_img[i].B;
-        //     float U = -0.147*(float)edit_img[i].R - 0.289*(float)edit_img[i].G + 0.436*(float)edit_img[i].B;
-        //     float V = 0.615*(float)edit_img[i].R - 0.515*(float)edit_img[i].G - 0.100*(float)edit_img[i].B;
-        //     Y = Y-5;
-        //     edit_img[i].R = (unsigned char)(int)(Y + 1.14*V);
-        //     edit_img[i].G = (unsigned char)(int)(Y - 0.39*U - 0.58*V);
-        //     edit_img[i].B = (unsigned char)(int)(Y + 2.03*U);
-        // }
-        // api_paint24BitmapToContent(&wnd, edit_img, (Point){content_pos.x,content_pos.y}, (Point){0,0},(Size){content_size.h,content_size.w},(Size){content_size.h,content_size.w});
-        // api_repaint(&wnd);
         return 1;
    }
    else {
@@ -774,27 +736,100 @@ int isMouseInRubberButton(int x, int y) {
 }
 
 int isMouseInPencilButton(int x, int y) {
-   if (580 <= x && x <= 610 && 0 <= y && y <= 30){
+   if (520 <= x && x <= 550 && 0 <= y && y <= 30){
         pencil_color = (RGB){0,0,255};
         if(is_pencil == 0) 
         {
             is_pencil = 1;
             is_rubber = 0;
             if(color_pick == -1) color_pick = 0;
-            api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, pressed_shift);
-            api_update(&wnd, (Rect){579, 0, 30, 30});
-            api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
-            api_update(&wnd, (Rect){610, 0, 30, 30});
+            api_drawImgButton(&wnd, pen_icon, (Point){520,0}, (Size){30,30}, border1, borderColor, pressed_shift);
+            api_update(&wnd, (Rect){520, 0, 30, 30});
+            api_drawImgButton(&wnd, rubber_icon, (Point){550,0}, (Size){30,30}, border1, borderColor, normal_shift);
+            api_update(&wnd, (Rect){550, 0, 30, 30});
             setColorItem();
         }
         else if(is_pencil == 1) 
         {
             color_pick = -1;
-            api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, normal_shift);
-            api_update(&wnd, (Rect){579, 0, 30, 30});
+            api_drawImgButton(&wnd, pen_icon, (Point){520,0}, (Size){30,30}, border1, borderColor, normal_shift);
+            api_update(&wnd, (Rect){520, 0, 30, 30});
             setColorItem();
             is_pencil = 0;
         }
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+void image_brightness_adjust_process(float degree)
+{
+    if(has_content == 1 && current_gif_img->gif_img_num > 1 && current_gif_img->is_onshow == 1)
+    {
+        has_content = 0;
+        brightness_degree = brightness_degree * degree;
+        edit_img = malloc(content_size.h*current_gif_img->gif_img_num*content_size.w*3);
+        memmove(edit_img, current_gif_img->data, content_size.h*content_size.w*current_gif_img->gif_img_num*3);
+        for(int i=0;i< content_size.h*content_size.w*current_gif_img->gif_img_num;i++)
+        {
+            edit_img[i].R = (unsigned char)(int)min(edit_img[i].R*brightness_degree, 255, 1000);
+            edit_img[i].G = (unsigned char)(int)min(edit_img[i].G*brightness_degree, 255, 1000);
+            edit_img[i].B = (unsigned char)(int)min(edit_img[i].B*brightness_degree, 255, 1000);
+        }
+        current_gif_img->data = edit_img;
+        int pos_y=235-(current_gif_img->h/current_gif_img->gif_img_num)/2;
+        int pos_x=390-current_gif_img->w/2;
+        api_paint24BitmapToContent(&wnd, current_gif_img->data, (Point){pos_x,pos_y}, (Point){0,(current_gif_img->h/current_gif_img->gif_img_num)*(gif_frame-1)},(Size){current_gif_img->h,current_gif_img->w},(Size){(current_gif_img->h/current_gif_img->gif_img_num),current_gif_img->w});
+        gif_frame = (gif_frame % current_gif_img->gif_img_num ) + 1;
+        api_repaint(&wnd);
+        has_content = 1;
+    }
+    else
+    {
+        brightness_degree = brightness_degree * degree;
+        edit_img = malloc(content_size.h*content_size.w*3);
+        if(scale_degree == 1 && turn_degree == 0)
+        {
+            memmove(edit_img, image_origin->data, content_size.h*content_size.w*3);
+        }
+        else if(turn_degree != 0)
+        {
+            memmove(edit_img, image_turn->data, content_size.h*content_size.w*3);
+        }
+        else if(scale_degree != 1)
+        {
+            memmove(edit_img, image_scale->data, content_size.h*content_size.w*3);
+        }
+        for(int i=0;i< content_size.h*content_size.w;i++)
+        {
+            edit_img[i].R = (unsigned char)(int)min(edit_img[i].R*brightness_degree, 255, 1000);
+            edit_img[i].G = (unsigned char)(int)min(edit_img[i].G*brightness_degree, 255, 1000);
+            edit_img[i].B = (unsigned char)(int)min(edit_img[i].B*brightness_degree, 255, 1000);
+        }
+        api_paint24BitmapToContent(&wnd, edit_img, (Point){content_pos.x,content_pos.y}, (Point){0,0},(Size){content_size.h,content_size.w},(Size){content_size.h,content_size.w});
+        api_repaint(&wnd);
+    }
+}
+
+int isMouseInBrightnessUpButton(int x, int y) {
+   if (580 < x && x <= 610 && 0 <= y && y <= 30){
+        api_drawImgButton(&wnd, brightness_up_icon, (Point){580,0}, (Size){30,30}, border1, borderColor, pressed_shift);
+        api_update(&wnd, (Rect){580, 0, 30, 30});
+        image_brightness_adjust_process(1.1);
+        return 1;
+   }
+   else {
+        return 0;
+   }
+}
+
+int isMouseInBrightnessDownButton(int x, int y) {
+   if (610 < x && x <= 640 && 0 <= y && y <= 30){
+        api_drawImgButton(&wnd, brightness_down_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, pressed_shift);
+        api_update(&wnd, (Rect){610, 0, 30, 30});
+        image_brightness_adjust_process(0.9);
         return 1;
    }
    else {
@@ -1105,6 +1140,7 @@ void showImageInContent()
         current_gif_img->is_onshow = 1;
         has_content = 1;
         scale_degree=1;
+        brightness_degree=1;
         turn_degree=0;
         image_origin->data=image_show[image_item-1]->data;
         image_origin->height=image_show[image_item-1]->h;
@@ -1125,6 +1161,7 @@ void showImageInContent()
         content_size=(Size){image_show[image_item-1]->h,image_show[image_item-1]->w};
         content_pos=(Point){140 + (500-content_size.w)/2,30 + (410-content_size.h)/2};
         scale_degree=1;
+        brightness_degree=1;
         turn_degree=0;
         image_origin->data=image_show[image_item-1]->data;
         image_origin->height=content_size.h;
@@ -1537,6 +1574,20 @@ void MsgProc(struct message * msg)
             api_update(&wnd, (Rect){0, 0, 30, 30});
             break;
         }
+        if(isMouseInBrightnessUpButton(msg->params[0], msg->params[1]))
+        {
+            sleep(3);
+            api_drawImgButton(&wnd, brightness_up_icon, (Point){580,0}, (Size){30,30}, border1, borderColor, normal_shift);
+            api_update(&wnd, (Rect){580, 0, 30, 30});
+            break;
+        }
+        if(isMouseInBrightnessDownButton(msg->params[0], msg->params[1]))
+        {
+            sleep(3);
+            api_drawImgButton(&wnd, brightness_down_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
+            api_update(&wnd, (Rect){610, 0, 30, 30});
+            break;
+        }
         if(isMouseInDeleteButton(msg->params[0], msg->params[1]))
         {
             sleep(3);
@@ -1817,8 +1868,8 @@ void MsgProc(struct message * msg)
             int pos_x=390-current_gif_img->w/2;
             api_paint24BitmapToContent(&wnd, current_gif_img->data, (Point){pos_x,pos_y}, (Point){0,(current_gif_img->h / current_gif_img->gif_img_num)*(gif_frame-1)},(Size){current_gif_img->h,current_gif_img->w},(Size){(current_gif_img->h / current_gif_img->gif_img_num),current_gif_img->w});
             gif_frame = (gif_frame % current_gif_img->gif_img_num ) + 1;
-            api_repaint(&wnd);
-            // api_update(&wnd, (Rect){pos_x, pos_y, (current_gif_img->h / current_gif_img->gif_img_num), current_gif_img->w});
+            // api_repaint(&wnd);
+            api_update(&wnd, (Rect){pos_x, pos_y, (current_gif_img->h / current_gif_img->gif_img_num), current_gif_img->w});
         }
         break;
     case M_CLOSE_WINDOW:
@@ -1886,6 +1937,8 @@ main(int argc, char *argv[])
     turnaround_icon = malloc(60*60*3);
     cut_confirm_icon = malloc(cut_box_button_width*cut_box_button_height*3);
     cut_cancel_icon = malloc(cut_box_button_width*cut_box_button_height*3);
+    brightness_up_icon = malloc(30*30*3);
+    brightness_down_icon = malloc(30*30*3);
     edit_img_test = malloc(edit_img_size.w*edit_img_size.h*3);
     
     api_createwindow(&wnd);
@@ -1914,17 +1967,21 @@ main(int argc, char *argv[])
     read24BitmapFile(turnaround_filename, turnaround_icon, &h, &w);
     read24BitmapFile(cut_confirm_filename, cut_confirm_icon, &h, &w);
     read24BitmapFile(cut_cancel_filename, cut_cancel_icon, &h, &w);
+    read24BitmapFile(brightness_up_filename, brightness_up_icon, &h, &w);
+    read24BitmapFile(brightness_down_filename, brightness_down_icon, &h, &w);
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
     api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, delete_icon, (Point){30,0},(Size){30,30}, border1, borderColor, normal_shift);
-    api_drawImgButton(&wnd, pen_icon, (Point){579,0}, (Size){30,30}, border1, borderColor, normal_shift);
-    api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
-    api_drawImgButton(&wnd, red_icon, (Point){555,5}, (Size){20,20}, 0, borderColor, normal_shift);
-    api_drawImgButton(&wnd, green_icon, (Point){525,5}, (Size){20,20}, 0, borderColor, normal_shift);
-    api_drawImgButton(&wnd, blue_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
-    api_drawImgButton(&wnd, purple_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
+    api_drawImgButton(&wnd, pen_icon, (Point){520,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, rubber_icon, (Point){550,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, brightness_up_icon, (Point){580,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, brightness_down_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, red_icon, (Point){495,5}, (Size){20,20}, 0, borderColor, normal_shift);
+    api_drawImgButton(&wnd, green_icon, (Point){465,5}, (Size){20,20}, 0, borderColor, normal_shift);
+    api_drawImgButton(&wnd, blue_icon, (Point){435,5}, (Size){20,20}, 0, borderColor, normal_shift);
+    api_drawImgButton(&wnd, purple_icon, (Point){405,5}, (Size){20,20}, 0, borderColor, normal_shift);
     api_drawImgButton(&wnd, cut_icon, (Point){60,0}, (Size){30,30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, zoomin_icon, (Point){142, 440}, (Size){60, 60}, border2, borderColor, normal_shift);
     api_drawImgButton(&wnd, zoomout_icon, (Point){202,440}, (Size){60,60}, border2, borderColor, normal_shift);
