@@ -104,8 +104,8 @@ GIF read_gif(char * filename) {
 
     gif.data = stat.results;
     gif.frame_num = stat.nfrm;
-    gif.height = stat.xdim;
-    gif.width = stat.ydim;
+    gif.height = stat.ydim;
+    gif.width = stat.xdim;
     return gif;
 
 }

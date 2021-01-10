@@ -9,10 +9,6 @@
 #include "stat.h"
 #include "image_utils.h"
 #include "bitmap.h"
-#include "loadgif.h"
-
-// #include "loader.h"
-// #include "saver.h"
 
 #define PI 3.1415926536
 #define MOUSE_SPEED_X 0.6f
@@ -21,6 +17,11 @@
 //define the xv6 param
 #include "gui_base.h"
 #include "gui_api.h"
+
+#include "loadgif.h"
+
+// #include "loader.h"
+// #include "saver.h"
 
 
 Window wnd;
@@ -141,6 +142,44 @@ int normal_shift = 0;
 int hover_shift = -30;
 int pressed_shift = -50;
 
+int max(int a, int b, int c) {
+    if(a>b && a>c)
+    {
+        return a;
+    }
+    else if(b>c && b>a)
+    {
+        return b;
+    }
+    else if(c>b && c>a)
+    {
+        return c;
+    }
+    else
+    {
+        return a;
+    }
+}
+
+int min(int a, int b, int c) {
+    if(a<b && a<c)
+    {
+        return a;
+    }
+    else if(b<c && b<a)
+    {
+        return b;
+    }
+    else if(c<b && c<a)
+    {
+        return c;
+    }
+    else
+    {
+        return a;
+    }
+}
+
 void ImageListInit(ImageList *image_list)
 {
 	image_list->head=0;
@@ -160,7 +199,7 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         }
     }
     image_type_tem[len]='\0';
-    if(strcmp(image_type_tem, "bmp")!=0 && strcmp(image_type_tem, "png")!=0 && strcmp(image_type_tem, "gif")!=0)
+    if(strcmp(image_type_tem, "bmp")!=0 && strcmp(image_type_tem, "png")!=0 && strcmp(image_type_tem, "jpeg")!=0 && strcmp(image_type_tem, "gif")!=0)
     {
         return;
     }
@@ -191,30 +230,32 @@ void ImageListAppend(char *filename, int size, int filename_len, ImageList *imag
         }
         append_image->image_type[len]='\0';
         append_image->image_size=size;
-        append_image->data=(RGB*)malloc(sizeof(RGB)*append_image->image_size);
         int h,w;
         if(strcmp(append_image->image_type, "bmp")==0)
         {
+            append_image->data=(RGB*)malloc(sizeof(RGB)*append_image->image_size);
             read24BitmapFile(append_image->image_name, append_image->data, &h, &w);
+        }
+        else if(strcmp(append_image->image_type, "gif")==0)
+        {
+            GIF gif = read_gif(append_image->image_name);
+            printf(1, "gif: %d %d %d", gif.height, gif.width, gif.frame_num);
+            append_image->data=(RGB*)malloc(sizeof(RGB)*gif.height*gif.width*gif.frame_num);
+            memmove(append_image->data, gif.data, gif.height*gif.width*gif.frame_num*3);
+            h=gif.height*gif.frame_num;
+            w=gif.width;
+            append_image->gif_img_num = gif.frame_num;
         }
         append_image->h=h;
         append_image->w=w;
-        if(strcmp(append_image->image_name, "enemy_big.bmp")==0 || strcmp(append_image->image_name, "enemy_middle.bmp")==0 || strcmp(append_image->image_name, "enemy_small.bmp")==0)
-        {
-            append_image->gif_img_num = 6;
-        }
-        else if(strcmp("giphy_small_t.bmp", append_image->image_name)==0)
-        {
-            append_image->gif_img_num = 27;
-        }
-        else
+        if(strcmp(append_image->image_type, "gif")!=0)
         {
             append_image->gif_img_num = 1;
         }
         append_image->is_onshow = 0;
         len=0;
         append_image->scale_needed=0;
-        if(strcmp("giphy_small_t.bmp", append_image->image_name)==0)
+        if(strcmp(append_image->image_type, "gif")==0)
         {
             image_origin_preview->height=h/append_image->gif_img_num;
             image_origin_preview->width=w;
@@ -682,6 +723,49 @@ int isMouseInRubberButton(int x, int y) {
             api_drawImgButton(&wnd, rubber_icon, (Point){610,0}, (Size){30,30}, border1, borderColor, normal_shift);
             api_update(&wnd, (Rect){610, 0, 30, 30});
         }
+        // edit_img = malloc(content_size.h*content_size.w*3);
+        // int max_line = content_size.w;
+        // struct RGB *t;
+        // struct RGB *o;
+        // for (int i = 0; i < content_size.h; i++) {
+        //     o = wnd.content + (content_pos.y + i) * wnd.size.w + content_pos.x;
+        //     t = edit_img + i * content_size.w;
+        //     memmove(t, o, max_line * 3);
+        // }
+        // for(int i=0;i< content_size.h*content_size.w;i++)
+        // {
+        //     // int Max = max((int)edit_img[i].R,(int)edit_img[i].G,(int)edit_img[i].B);
+        //     // int Min = min((int)edit_img[i].R,(int)edit_img[i].G,(int)edit_img[i].B);
+        //     // int H = 0;
+        //     // if((int)edit_img[i].R==Max)
+        //     // {
+        //     //     H = (edit_img[i].G-edit_img[i].B)/(Max-Min);
+        //     // }
+        //     // else if((int)edit_img[i].G==Max)
+        //     // {
+        //     //     H = 2 + (edit_img[i].B-edit_img[i].R)/(Max-Min);
+        //     // }
+        //     // else if((int)edit_img[i].B==Max)
+        //     // {
+        //     //     H = 4 + (edit_img[i].R-edit_img[i].G)/(Max-Min);
+        //     // }
+        //     // H = H * 60;
+        //     // if(H < 0)
+        //     // {
+        //     //     H = H + 360;
+        //     // }
+        //     // int V = Max;
+        //     // int S=(Max-Min)/Max;
+        //     float Y = 0.299*(float)edit_img[i].R + 0.587*(float)edit_img[i].G + 0.114*(float)edit_img[i].B;
+        //     float U = -0.147*(float)edit_img[i].R - 0.289*(float)edit_img[i].G + 0.436*(float)edit_img[i].B;
+        //     float V = 0.615*(float)edit_img[i].R - 0.515*(float)edit_img[i].G - 0.100*(float)edit_img[i].B;
+        //     Y = Y-5;
+        //     edit_img[i].R = (unsigned char)(int)(Y + 1.14*V);
+        //     edit_img[i].G = (unsigned char)(int)(Y - 0.39*U - 0.58*V);
+        //     edit_img[i].B = (unsigned char)(int)(Y + 2.03*U);
+        // }
+        // api_paint24BitmapToContent(&wnd, edit_img, (Point){content_pos.x,content_pos.y}, (Point){0,0},(Size){content_size.h,content_size.w},(Size){content_size.h,content_size.w});
+        // api_repaint(&wnd);
         return 1;
    }
    else {
@@ -893,7 +977,7 @@ int isMouseInCutButton(int x, int y) {
 
 void setImageList()
 {
-    RGBA image_name_color = {255,0,0,0};
+    RGBA image_name_color = {0,0,0,255};
     struct RGB *t;
     struct RGB *o;
     int max_line = image_list_size.w;
@@ -921,7 +1005,7 @@ void setImageList()
         if(name_len>15)
         {
             char* image_name_slug;
-            image_name_slug=(char*)malloc(sizeof(char)*name_len);
+            image_name_slug=(char*)malloc(sizeof(char)*16);
             for(int j=0;j<6;j++) 
             {
                 image_name_slug[j]=image_show[i]->image_name[j];
@@ -931,12 +1015,14 @@ void setImageList()
             image_name_slug[7]='.';
             image_name_slug[8]='.';
             name_len=15;
+            image_name_slug[15] = '\0';
             offset_x=(140-name_len*9)/2;
             api_drawString(&wnd, offset_x, 80+130*i+90, image_name_slug, image_name_color);
         }
         else if(name_len<=15 && name_len>=0)
         {
-            offset_x=(140-name_len*9)/2;       
+            offset_x=(140-name_len*9)/2;
+            printf(1, "name: %s\n", image_show[i]->image_name);   
             api_drawString(&wnd, offset_x, 80+130*i+90, image_show[i]->image_name, image_name_color);
         }
         api_repaint(&wnd);
@@ -986,7 +1072,7 @@ int isMouseInListDownButton(int x, int y) {
 
 void showImageInContent()
 {
-    RGBA image_name_color = {255,0,0,0};
+    RGBA image_name_color = {0,0,0,255};
     struct RGB *t;
     struct RGB *o;
     int max_line = edit_img_size.w;
@@ -1731,7 +1817,6 @@ void MsgProc(struct message * msg)
             int pos_x=390-current_gif_img->w/2;
             api_paint24BitmapToContent(&wnd, current_gif_img->data, (Point){pos_x,pos_y}, (Point){0,(current_gif_img->h / current_gif_img->gif_img_num)*(gif_frame-1)},(Size){current_gif_img->h,current_gif_img->w},(Size){(current_gif_img->h / current_gif_img->gif_img_num),current_gif_img->w});
             gif_frame = (gif_frame % current_gif_img->gif_img_num ) + 1;
-            printf(1, "gif_frame, %d\n", gif_frame);
             api_repaint(&wnd);
             // api_update(&wnd, (Rect){pos_x, pos_y, (current_gif_img->h / current_gif_img->gif_img_num), current_gif_img->w});
         }
@@ -1804,10 +1889,6 @@ main(int argc, char *argv[])
     edit_img_test = malloc(edit_img_size.w*edit_img_size.h*3);
     
     api_createwindow(&wnd);
-    
-    GIF gif = read_gif("giphy_small.gif");
-    printf(1, "gif:");
-    printf(1, "%d %d %d\n", gif.height, gif.width, gif.frame_num);
 
     // save_icon = LoadImg(save_filename);
     read24BitmapFile(save_filename, save_icon, &h, &w);
