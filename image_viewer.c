@@ -28,7 +28,7 @@
 
 Window wnd;
 
-PBitmap save_icon;
+RGB* save_icon;
 RGB* delete_icon;
 RGB* cut_icon;
 RGB* pen_icon;
@@ -45,7 +45,6 @@ RGB* rotate_right_30_icon;
 RGB* rotate_right_90_icon;
 RGB* image_list_up_icon;
 RGB* image_list_down_icon;
-RGB* bmp_icon;
 RGB* rollover_icon;
 RGB* turnaround_icon;
 RGB* cut_confirm_icon;
@@ -76,30 +75,29 @@ PBitmap* image_scale_preview;
 PBitmap* image_turn;
 PBitmap* image_rollover;
 PBitmap* image_turnaround;
-char save_filename[] = "save-w5.bmp";
-char delete_filename[] = "delete-w3.bmp";
-char cut_filename[] = "cut-w3.bmp";
-char pen_filename[] = "pen-w3.bmp";
-char rubber_filename[] = "rubber-w3.bmp";
-char red_filename[] = "red-circle-w6.bmp";
-char green_filename[] = "green-w2.bmp";
-char blue_filename[] = "blue-w2.bmp";
-char purple_filename[] = "purple-w2.bmp";
-char rotate_left_90_filename[] = "90-left-w3.bmp";
-char rotate_left_30_filename[] = "30-left-w3.bmp";
-char rotate_right_30_filename[] = "30-right-w3.bmp";
-char rotate_right_90_filename[] = "90-right-w4.bmp";
-char zoomin_filename[] = "zoomin-w3.bmp";
-char zoomout_filename[] = "zoomout-w2.bmp";
-char image_list_up_filename[] = "up-w3.bmp";
-char image_list_down_filename[] = "down-w3.bmp";
-char bmp_filename[] = "bmp-w7.bmp";
-char rollover_filename[] = "rollover-w11.bmp";
-char turnaround_filename[] = "turnaround-w5.bmp";
-char cut_confirm_filename[] = "ok-w3.bmp";
-char cut_cancel_filename[] = "no-w3.bmp";
-char brightness_up_filename[] = "brightness_up_w4.bmp";
-char brightness_down_filename[] = "brightness_down_w4.bmp";
+char save_filename[] = "save-w5.jpeg";
+char delete_filename[] = "delete-w3.jpeg";
+char cut_filename[] = "cut-w3.jpeg";
+char pen_filename[] = "pen-w3.jpeg";
+char rubber_filename[] = "rubber-w3.jpeg";
+char red_filename[] = "red-circle-w6.jpeg";
+char green_filename[] = "green-w2.jpeg";
+char blue_filename[] = "blue-w2.jpeg";
+char purple_filename[] = "purple-w2.jpeg";
+char rotate_left_90_filename[] = "90-left-w3.jpeg";
+char rotate_left_30_filename[] = "30-left-w3.jpeg";
+char rotate_right_30_filename[] = "30-right-w3.jpeg";
+char rotate_right_90_filename[] = "90-right-w4.jpeg";
+char zoomin_filename[] = "zoomin-w3.jpeg";
+char zoomout_filename[] = "zoomout-w2.jpeg";
+char image_list_up_filename[] = "up-w3.jpeg";
+char image_list_down_filename[] = "down-w3.jpeg";
+char rollover_filename[] = "rollover-w11.jpeg";
+char turnaround_filename[] = "turnaround-w5.jpeg";
+char cut_confirm_filename[] = "ok-w3.jpeg";
+char cut_cancel_filename[] = "no-w3.jpeg";
+char brightness_up_filename[] = "brightness_up_w4.jpeg";
+char brightness_down_filename[] = "brightness_down_w4.jpeg";
 char filename[] = "testtest.bmp";
 
 RGB pencil_color={0,0,255};
@@ -417,11 +415,7 @@ ls_new(char *path)
           ;
       if(*filetype != '.' || filename[0]=='.') is_file=0;
       else if(*filetype == '.') is_file=1;
-      if(is_file == 0)
-      {
-          char tem[]="not a file";
-      }
-      else if(is_file == 1)
+      if(is_file == 1)
       {
           filetype++;
           char tem[DIRSIZ+1];
@@ -795,7 +789,7 @@ int isMouseInBrightnessDownButton(int x, int y) {
 
 int isMouseInSaveButton(int x, int y) {
    if (0 <= x && x <= 30 && 0 <= y && y <= 30){
-        api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, pressed_shift);
+        api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, pressed_shift);
         api_update(&wnd, (Rect){0, 0, 30, 30});
         struct RGB *t;
         struct RGB *o;
@@ -1526,7 +1520,7 @@ void MsgProc(struct message * msg)
         }
         if( has_img_content == 1 && (has_content != 1 || current_gif_img->gif_img_num == 1 || current_gif_img->is_onshow != 1) && isMouseInSaveButton(msg->params[0], msg->params[1]))
         {
-            api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
+            api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
             api_update(&wnd, (Rect){0, 0, 30, 30});
             break;
         }
@@ -1812,7 +1806,7 @@ void MsgProc(struct message * msg)
         break;
     case M_CLOSE_WINDOW:
         printf(1, "USER_CLOSE\n");
-        free(save_icon.data);
+        free(save_icon);
         free(delete_icon);
         free(cut_icon);
         free(pen_icon);
@@ -1829,7 +1823,6 @@ void MsgProc(struct message * msg)
         free(rotate_right_90_icon);
         free(image_list_up_icon);
         free(image_list_down_icon);
-        free(bmp_icon);
         free(edit_img_origin);
         free(image_title_origin);
         free(image_list_origin);
@@ -1851,8 +1844,7 @@ main(int argc, char *argv[])
     wnd.size.h = 500;
     wnd.title = "PhotoViewer";
     
-    int h,w;
-    // save_icon = malloc(30*30*3);
+    save_icon = malloc(30*30*3);
     delete_icon = malloc(30*30*3);
     cut_icon = malloc(30*30*3);
     pen_icon = malloc(30*30*3);
@@ -1869,7 +1861,6 @@ main(int argc, char *argv[])
     rotate_right_90_icon = malloc(60*65*3);
     image_list_up_icon = malloc(35*20*3);
     image_list_down_icon = malloc(35*20*3);
-    bmp_icon = malloc(80*80*3);
     rollover_icon = malloc(60*60*3);
     turnaround_icon = malloc(60*60*3);
     cut_confirm_icon = malloc(cut_box_button_width*cut_box_button_height*3);
@@ -1880,38 +1871,60 @@ main(int argc, char *argv[])
     
     api_createwindow(&wnd);
 
-    save_icon = LoadImg(save_filename);
+    // save_icon = LoadImg(save_filename);
 
-    // PBitmap jpeg = LoadImg("icon1.jpeg");
-    PBitmap png = LoadImg("icon1.png");
-    // read24BitmapFile(save_filename, save_icon, &h, &w);
-    read24BitmapFile(delete_filename, delete_icon,&h,&w);
-    read24BitmapFile(cut_filename, cut_icon, &h, &w);
-    read24BitmapFile(pen_filename, pen_icon, &h, &w);
-    read24BitmapFile(rubber_filename, rubber_icon, &h, &w);
-    read24BitmapFile(red_filename, red_icon, &h, &w);
-    read24BitmapFile(green_filename, green_icon, &h, &w);
-    read24BitmapFile(blue_filename, blue_icon, &h, &w);
-    read24BitmapFile(purple_filename, purple_icon, &h, &w);
-    read24BitmapFile(zoomin_filename, zoomin_icon, &h, &w);
-    read24BitmapFile(zoomout_filename, zoomout_icon, &h, &w);
-    read24BitmapFile(rotate_left_90_filename, rotate_left_90_icon, &h, &w);
-    read24BitmapFile(rotate_left_30_filename, rotate_left_30_icon, &h, &w);
-    read24BitmapFile(rotate_right_30_filename, rotate_right_30_icon, &h, &w);
-    read24BitmapFile(rotate_right_90_filename, rotate_right_90_icon, &h, &w);
-    read24BitmapFile(image_list_down_filename, image_list_down_icon, &h, &w);
-    read24BitmapFile(image_list_up_filename, image_list_up_icon, &h, &w);
-    read24BitmapFile(bmp_filename, bmp_icon, &h, &w);
-    read24BitmapFile(rollover_filename, rollover_icon, &h, &w);
-    read24BitmapFile(turnaround_filename, turnaround_icon, &h, &w);
-    read24BitmapFile(cut_confirm_filename, cut_confirm_icon, &h, &w);
-    read24BitmapFile(cut_cancel_filename, cut_cancel_icon, &h, &w);
-    read24BitmapFile(brightness_up_filename, brightness_up_icon, &h, &w);
-    read24BitmapFile(brightness_down_filename, brightness_down_icon, &h, &w);
+    
+    // PBitmap png = LoadImg("icon1.png");
+    PBitmap save = LoadImg(save_filename);
+    memmove(save_icon, save.data, 30*30*3);
+    PBitmap delete = LoadImg(delete_filename);
+    memmove(delete_icon, delete.data, 30*30*3);
+    PBitmap cut = LoadImg(cut_filename);
+    memmove(cut_icon, cut.data, 30*30*3);
+    PBitmap pen = LoadImg(pen_filename);
+    memmove(pen_icon, pen.data, 30*30*3);
+    PBitmap rubber = LoadImg(rubber_filename);
+    memmove(rubber_icon, rubber.data, 30*30*3);
+    PBitmap red = LoadImg(red_filename);
+    memmove(red_icon, red.data, 20*20*3);
+    PBitmap green = LoadImg(green_filename);
+    memmove(green_icon, green.data, 20*20*3);
+    PBitmap blue = LoadImg(blue_filename);
+    memmove(blue_icon, blue.data, 20*20*3);
+    PBitmap purple = LoadImg(purple_filename);
+    memmove(purple_icon, purple.data, 20*20*3);
+    PBitmap zoomin = LoadImg(zoomin_filename);
+    memmove(zoomin_icon, zoomin.data, 60*60*3);
+    PBitmap zoomout = LoadImg(zoomout_filename);
+    memmove(zoomout_icon, zoomout.data, 60*60*3);
+    PBitmap rotate_left_90 = LoadImg(rotate_left_90_filename);
+    memmove(rotate_left_90_icon, rotate_left_90.data, 60*63*3);
+    PBitmap rotate_left_30 = LoadImg(rotate_left_30_filename);
+    memmove(rotate_left_30_icon, rotate_left_30.data, 60*65*3);
+    PBitmap rotate_right_30 = LoadImg(rotate_right_30_filename);
+    memmove(rotate_right_30_icon, rotate_right_30.data, 60*65*3);
+    PBitmap rotate_right_90 = LoadImg(rotate_right_90_filename);
+    memmove(rotate_right_90_icon, rotate_right_90.data, 60*65*3);
+    PBitmap image_list_down = LoadImg(image_list_down_filename);
+    memmove(image_list_down_icon, image_list_down.data, 35*20*3);
+    PBitmap image_list_up = LoadImg(image_list_up_filename);
+    memmove(image_list_up_icon, image_list_up.data, 35*20*3);
+    PBitmap rollover = LoadImg(rollover_filename);
+    memmove(rollover_icon, rollover.data, 60*60*3);
+    PBitmap turnaround = LoadImg(turnaround_filename);
+    memmove(turnaround_icon, turnaround.data, 60*60*3);
+    PBitmap cut_confirm = LoadImg(cut_confirm_filename);
+    memmove(cut_confirm_icon, cut_confirm.data, cut_box_button_width*cut_box_button_height*3);
+    PBitmap cut_cancel = LoadImg(cut_cancel_filename);
+    memmove(cut_cancel_icon, cut_cancel.data, cut_box_button_width*cut_box_button_height*3);
+    PBitmap brightness_up = LoadImg(brightness_up_filename);
+    memmove(brightness_up_icon, brightness_up.data, 30*30*3);
+    PBitmap brightness_down = LoadImg(brightness_down_filename);
+    memmove(brightness_down_icon, brightness_down.data, 30*30*3);
     
     // memset(wnd.content, pra * 50, wnd.size.w * wnd.size.h * 3);
 
-    api_drawImgButton(&wnd, save_icon.data, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
+    api_drawImgButton(&wnd, save_icon, (Point){0, 0}, (Size){30, 30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, delete_icon, (Point){30,0},(Size){30,30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, pen_icon, (Point){520,0}, (Size){30,30}, border1, borderColor, normal_shift);
     api_drawImgButton(&wnd, rubber_icon, (Point){550,0}, (Size){30,30}, border1, borderColor, normal_shift);
