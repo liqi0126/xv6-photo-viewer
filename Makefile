@@ -182,27 +182,13 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_desktop\
-	_test\
-    _painter\
-    _plane\
-    _editor\
-    _timerapp\
+	_image_viewer\
 
 IMGS=desktop.bmp\
-     clock.bmp\
-     editor.bmp\
-	 test.bmp\
-     plane.bmp\
-     painter.bmp\
+	 image_viewer.bmp\
      test_t.bmp\
      plane_t.bmp\
      painter_t.bmp\
-     background.bmp\
-     bullet1.bmp\
-     enemy_big.bmp\
-     enemy_middle.bmp\
-     enemy_small.bmp\
-     hero.bmp\
 	 save-w5.bmp\
 	 delete-w3.bmp\
 	 pen-w3.bmp\
@@ -221,24 +207,11 @@ IMGS=desktop.bmp\
 	 up-w3.bmp\
 	 down-w3.bmp\
 	 bmp-w7.bmp\
-	 images.bmp\
-     0.bmp\
-     1.bmp\
-     2.bmp\
-     3.bmp\
-     4.bmp\
-     5.bmp\
-     6.bmp\
-     7.bmp\
-     8.bmp\
-     9.bmp\
-     separator.bmp\
 	 turnaround-w5.bmp\
 	 rollover-w11.bmp\
 	 ok-w3.bmp\
 	 no-w3.bmp\
 	 giphy_small_t.gif\
-	 woman_t.gif\
 
 fs.img: mkfs README $(IMGS) $(UPROGS)
 	./mkfs fs.img README $(IMGS) $(UPROGS)

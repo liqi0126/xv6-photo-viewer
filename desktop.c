@@ -8,10 +8,9 @@
 #include "gui_api.h"
 
 Window wnd;
-#define  AppCount 5
+#define  AppCount 1
 #define  IconSize 80
-char * appName[] = {"test.bmp", "plane.bmp",
-    "clock.bmp", "editor.bmp", "painter.bmp"};
+char * appName[] = {"image_viewer.bmp"};
 char save_filename[] = "images.bmp";
 Point appPos[AppCount];
 RGB IconBuffer[IconSize * IconSize];
