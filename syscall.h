@@ -20,9 +20,10 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
-#define SYS_createwindow 22
-#define SYS_repaintwindow 23
-#define SYS_getmessage 24
-#define SYS_settimer   25
-#define SYS_updatewindow 26
-#define SYS_destroywindow 27
+#define SYS_lseek  22
+#define SYS_createwindow 23
+#define SYS_repaintwindow 24
+#define SYS_getmessage 25
+#define SYS_settimer   26
+#define SYS_updatewindow 27
+#define SYS_destroywindow 28

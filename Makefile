@@ -143,7 +143,7 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	perl vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o image_utils.o loader.o loadpng.o loadjpeg.o
+ULIB = ulib.o usys.o printf.o umalloc.o math.o bitmap.o mouse_shape.o character.o gui_api.o gui_base.o image_utils.o loader.o loadpng.o loadjpeg.o loadgif.o
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -182,24 +182,13 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_desktop\
-	_test\
-    _painter\
-    _plane\
-    _editor\
-    _timerapp\
+	_image_viewer\
 
 IMGS=desktop.bmp\
-     clock.bmp\
-     editor.bmp\
-     test.bmp\
-     plane.bmp\
-     painter.bmp\
-     background.bmp\
-     bullet1.bmp\
-     enemy_big.bmp\
-     enemy_middle.bmp\
-     enemy_small.bmp\
-     hero.bmp\
+	 image_viewer.bmp\
+     test_t.bmp\
+     plane_t.bmp\
+     painter_t.bmp\
 	 save-w5.bmp\
 	 delete-w3.bmp\
 	 pen-w3.bmp\
@@ -218,22 +207,11 @@ IMGS=desktop.bmp\
 	 up-w3.bmp\
 	 down-w3.bmp\
 	 bmp-w7.bmp\
-	 images.bmp\
-     0.bmp\
-     1.bmp\
-     2.bmp\
-     3.bmp\
-     4.bmp\
-     5.bmp\
-     6.bmp\
-     7.bmp\
-     8.bmp\
-     9.bmp\
-     separator.bmp\
 	 turnaround-w5.bmp\
 	 rollover-w11.bmp\
-	 giphy_small.bmp\
 	 ok-w3.bmp\
+	 no-w3.bmp\
+	 giphy_small_t.gif\
 	#  jpeg.jpeg\
 	#  png.png\
 

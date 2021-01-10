@@ -5,8 +5,10 @@
 
 #ifndef __ASSEMBLER__
 
-unsigned short SCREEN_WIDTH;
-unsigned short SCREEN_HEIGHT;
+#include "types.h"
+
+ushort SCREEN_WIDTH;
+ushort SCREEN_HEIGHT;
 int screen_size; 
 
 #define UTITLE_HEIGHT 30
@@ -22,11 +24,12 @@ typedef struct RGB {
 
 // 32 bit RGBA. used above GUI Utility
 typedef struct RGBA {
-    unsigned char A;
     unsigned char B;
     unsigned char G;
     unsigned char R;
+    unsigned char A;
 } RGBA;
+
 
 typedef struct Rect {
     int x;
@@ -62,6 +65,7 @@ typedef struct Image
     int gif_img_num;
     int is_onshow;
     struct RGB* data;
+    struct RGB* gif_preview;
     int scale_needed;
     struct RGB* scale_data;
     int h;
@@ -72,7 +76,11 @@ typedef struct Image
 	struct Image* prev;
 	struct Image* next;
 }Image;
-
+typedef struct GIF {
+    long frame_num;
+    long width, height;
+    RGB * data;
+} GIF;
 typedef struct ImageList
 {
 	struct Image* head;

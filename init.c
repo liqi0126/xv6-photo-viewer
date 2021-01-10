@@ -28,7 +28,7 @@ main(void)
     }
     if(pid == 0){
       exec("desktop", argv);
-      printf(1, "init: exec desktop failed\n");
+      printf(1, "init: exec desktopfailed\n");
       exit();
     }
     while((wpid=wait()) >= 0 && wpid != pid)
