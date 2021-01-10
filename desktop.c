@@ -114,7 +114,6 @@ main(void) {
     api_paint24Bitmap(&wnd, background,(Point){0,0}, (Size){h, w});
     desktopInit();
     api_repaint(&wnd);
-    printf(1, "safe here\n");
     api_exec(&wnd, &MsgProc);
     return 0;
 }
